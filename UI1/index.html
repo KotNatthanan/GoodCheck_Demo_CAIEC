@@ -1,0 +1,1055 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GoodCheck | Trusted Marketplace for Pre-Owned Computer Gear</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css?v=20260328m" />
+    <script
+      src="https://unpkg.com/lucide@0.263.1/dist/umd/lucide.js"
+      defer
+    ></script>
+    <script type="module" src="app.js?v=20260328m"></script>
+  </head>
+  <body>
+    <div class="global-background" aria-hidden="true">
+      <div class="bg-grid"></div>
+      <div class="bg-glow bg-glow--one"></div>
+      <div class="bg-glow bg-glow--two"></div>
+    </div>
+    <div class="page">
+      <header class="top-nav">
+        <div class="top-nav__bar">
+          <div class="brand">
+            <div class="brand-mark">G</div>
+            <div>
+              <p class="brand-title">GoodCheck</p>
+              <p class="brand-subtitle" data-i18n="brand.subtitle">Trusted Pro Marketplace</p>
+            </div>
+          </div>
+          <button
+            class="nav-mobile-toggle"
+            id="navMobileToggleBtn"
+            type="button"
+            aria-controls="topNavPanel"
+            aria-expanded="false"
+            data-i18n-aria="nav.toggle_menu"
+          >
+            <i data-lucide="menu"></i>
+          </button>
+        </div>
+        <div class="top-nav__panel" id="topNavPanel">
+          <nav class="nav-links">
+            <a href="#products" data-i18n="nav.listings">Listings</a>
+            <a href="#categories" data-i18n="nav.use_cases">Use Cases</a>
+            <a href="#standards" data-i18n="nav.standards">Global Standards</a>
+            <a href="#trust-center" data-i18n="nav.trust_center">Trust Center</a>
+            <a href="#contact" data-i18n="nav.contact">Contact</a>
+          </nav>
+          <div class="nav-actions">
+            <div class="nav-pill-cluster">
+              <div class="lang-switcher">
+                <button class="nav-pill-btn lang-switcher__btn" id="langSwitcherBtn" type="button">
+                  <span class="lang-flag">🇬🇧</span><span class="lang-code">EN</span>
+                </button>
+                <div class="lang-switcher__dropdown" id="langDropdown">
+                  <button class="lang-option" data-lang="en" type="button"><span>🇬🇧</span> English</button>
+                  <button class="lang-option" data-lang="th" type="button"><span>🇹🇭</span> ภาษาไทย</button>
+                </div>
+              </div>
+              <span class="nav-pill-sep"></span>
+              <div class="lang-switcher">
+                <button class="nav-pill-btn lang-switcher__btn" id="currSwitcherBtn" type="button">
+                  <span class="curr-symbol">฿</span><span class="curr-code">THB</span>
+                </button>
+                <div class="lang-switcher__dropdown" id="currDropdown">
+                  <button class="curr-option" data-currency="THB" type="button"><span>฿</span> Thai Baht</button>
+                  <button class="curr-option" data-currency="USD" type="button"><span>$</span> US Dollar</button>
+                </div>
+              </div>
+              <span class="nav-pill-sep"></span>
+              <button
+                class="nav-pill-btn theme-toggle-btn"
+                id="themeToggleBtn"
+                type="button"
+                data-i18n-aria="nav.toggle_theme"
+              >
+                <i data-lucide="sun"></i>
+              </button>
+            </div>
+
+            <button class="nav-text-btn" id="openGuide" data-i18n="nav.buyer_guide">Guide</button>
+            <button class="nav-text-btn" id="openChatInbox" data-i18n="nav.messages">Messages</button>
+            <button class="nav-text-btn" id="openMyOrders" style="display:none" data-i18n="nav.my_orders">My Orders</button>
+            <button class="nav-text-btn nav-text-btn--accent" id="openSellerHub" style="display:none" data-i18n="nav.seller_hub">Seller Hub</button>
+            <button class="nav-text-btn nav-text-btn--accent" id="openAdminPanel" style="display:none" data-i18n="nav.admin">Admin</button>
+
+            <div id="userSection" class="user-section">
+              <span id="userName" class="user-name"></span>
+              <button class="nav-text-btn" id="logoutBtn" style="display:none" data-i18n="nav.log_out">Log out</button>
+              <button class="nav-signin-btn" id="loginBtn" data-i18n="nav.sign_in">Sign in</button>
+            </div>
+
+            <button class="nav-cta-btn" id="addProductBtn">
+              <span data-i18n="nav.sell_now">Sell Now</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <section class="hero">
+          <div class="hero__content">
+            <p class="eyebrow" data-i18n="hero.eyebrow">Marketplace for gamers, creators, and builders</p>
+            <h1>
+              <span data-i18n="hero.title_main">Find premium pre-owned PC gear</span>
+              <span data-i18n="hero.title_accent">verified before every deal</span>
+            </h1>
+            <p class="lead" data-i18n="hero.lead">
+              Every listing is backed by usage history checks and test coverage
+              before handoff, so you can buy with confidence and clarity.
+            </p>
+            <div class="hero__ticker" aria-label="Performance highlights">
+              <span data-i18n="hero.ticker_deals">2,400+ enterprise-grade deals</span>
+              <span data-i18n="hero.ticker_inventory">Inventory ceiling THB 1.8M</span>
+              <span data-i18n="hero.ticker_guarantee">48-hour Guarantee Fund</span>
+            </div>
+            <div class="hero__actions">
+              <button class="primary-btn large" id="exploreBtn">
+                <i data-lucide="search"></i>
+                <span data-i18n="hero.btn_explore">Explore Listings</span>
+              </button>
+              <button class="outline-btn large" id="verifyBtn">
+                <i data-lucide="shield-check"></i>
+                <span data-i18n="hero.btn_verify">See Verification Flow</span>
+              </button>
+            </div>
+            <div id="heroStats" class="hero__stats"></div>
+          </div>
+          <div class="hero__visual">
+            <div class="hero-badge">
+              <p data-i18n="hero.badge_title">Quantum QC Lab</p>
+              <strong data-i18n="hero.badge_subtitle">5-layer audit / 30 checkpoints</strong>
+            </div>
+            <img
+              src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=1200&q=80"
+              alt="Gaming PC setup"
+            />
+            <div class="hero-cert">
+              <i data-lucide="medal"></i>
+              <div>
+                <p data-i18n="hero.cert_title">GoodCheck Shield Guarantee</p>
+                <small data-i18n="hero.cert_subtitle">Fast delivery and onsite support covered</small>
+              </div>
+            </div>
+            <div class="hero-floating">
+              <p data-i18n="hero.floating_title">Concierge for premium listings</p>
+              <strong data-i18n="hero.floating_subtitle">Personal Deal Manager</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="assurance" aria-label="Trust highlights">
+          <article class="assurance-card">
+            <div class="assurance-icon">
+              <i data-lucide="fingerprint"></i>
+            </div>
+            <div>
+              <h3 data-i18n="assurance.identity_title">Identity Verified</h3>
+              <p data-i18n="assurance.identity_desc">Seller KYC and device fingerprint checks before every listing.</p>
+            </div>
+            <strong data-i18n="assurance.identity_tier">Tier X</strong>
+          </article>
+          <article class="assurance-card">
+            <div class="assurance-icon">
+              <i data-lucide="shield-check"></i>
+            </div>
+            <div>
+              <h3 data-i18n="assurance.escrow_title">Escrow Vault</h3>
+              <p data-i18n="assurance.escrow_desc">Funds are held during inspection with full asset protection.</p>
+            </div>
+            <strong data-i18n="assurance.escrow_tier">Prime</strong>
+          </article>
+          <article class="assurance-card">
+            <div class="assurance-icon">
+              <i data-lucide="sparkles"></i>
+            </div>
+            <div>
+              <h3 data-i18n="assurance.concierge_title">Executive Concierge</h3>
+              <p data-i18n="assurance.concierge_desc">Dedicated matching support for high-value office and studio setups.</p>
+            </div>
+            <strong data-i18n="assurance.concierge_tier">24/7</strong>
+          </article>
+        </section>
+
+        <section class="standards" id="standards">
+          <div class="standards__intro">
+            <p class="eyebrow" data-i18n="standards.eyebrow">Global Standards</p>
+            <h2 data-i18n="standards.title">Built to feel clear, premium, and cross-border ready.</h2>
+            <p class="muted" data-i18n="standards.desc">
+              The marketplace now uses a stronger international UX language:
+              structured verification, documented handoff rules, and buyer
+              protection copy that feels closer to a modern global platform
+              than a local classifieds board.
+            </p>
+            <div class="standards__metrics">
+              <article class="metric-card">
+                <strong>30-point</strong>
+                <span data-i18n="standards.metric_quality">quality review playbook</span>
+              </article>
+              <article class="metric-card">
+                <strong>24h</strong>
+                <span data-i18n="standards.metric_support">support escalation target</span>
+              </article>
+              <article class="metric-card">
+                <strong>2-step</strong>
+                <span data-i18n="standards.metric_handoff">protected handoff flow</span>
+              </article>
+            </div>
+            <div class="standards__markets" aria-label="Marketplace strengths">
+              <span data-i18n="standards.market_english">English-first marketplace copy</span>
+              <span data-i18n="standards.market_inspection">Inspection-led listings</span>
+              <span data-i18n="standards.market_escrow">Escrow-friendly handoff</span>
+              <span data-i18n="standards.market_seller">Professional seller trust signals</span>
+            </div>
+          </div>
+          <div class="standards__grid">
+            <article class="standard-card">
+              <div class="standard-card__icon">
+                <i data-lucide="shield-check"></i>
+              </div>
+              <h3 data-i18n="standards.card1_title">Structured Verification</h3>
+              <p data-i18n="standards.card1_desc">
+                Listing, identity, and condition details are framed in a way
+                that international buyers expect from premium resale platforms.
+              </p>
+            </article>
+            <article class="standard-card">
+              <div class="standard-card__icon">
+                <i data-lucide="file-text"></i>
+              </div>
+              <h3 data-i18n="standards.card2_title">Documentation-First Listings</h3>
+              <p data-i18n="standards.card2_desc">
+                Product pages emphasize specs, warranty, fulfillment details,
+                and seller credibility instead of relying on short descriptions.
+              </p>
+            </article>
+            <article class="standard-card">
+              <div class="standard-card__icon">
+                <i data-lucide="truck"></i>
+              </div>
+              <h3 data-i18n="standards.card3_title">Protected Handoff Flow</h3>
+              <p data-i18n="standards.card3_desc">
+                Pickup, courier, and post-sale follow-up are presented as a
+                guided flow, reducing friction for higher-value transactions.
+              </p>
+            </article>
+            <article class="standard-card">
+              <div class="standard-card__icon">
+                <i data-lucide="headphones"></i>
+              </div>
+              <h3 data-i18n="standards.card4_title">Support-Led Experience</h3>
+              <p data-i18n="standards.card4_desc">
+                The interface now highlights service quality, response
+                expectations, and support coverage across the full buyer journey.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="filters">
+          <div class="filters__header">
+            <div>
+              <p class="eyebrow" data-i18n="filters.eyebrow">Refine your search</p>
+              <h2 data-i18n="filters.title">Find the right item faster</h2>
+            </div>
+            <button class="ghost-btn" id="resetFilters">
+              <i data-lucide="rotate-ccw"></i>
+              <span data-i18n="filters.reset">Reset Filters</span>
+            </button>
+          </div>
+          <div class="filter-shortcuts" id="filterShortcuts">
+            <button class="filter-shortcut" type="button" data-filter-shortcut="category" data-value="Graphics Card">
+              <i data-lucide="cpu"></i>
+              <span data-i18n="filters.shortcut_gpu">Graphics Cards</span>
+            </button>
+            <button class="filter-shortcut" type="button" data-filter-shortcut="category" data-value="Monitor">
+              <i data-lucide="monitor"></i>
+              <span data-i18n="filters.shortcut_monitor">Monitors</span>
+            </button>
+            <button class="filter-shortcut" type="button" data-filter-shortcut="condition" data-value="Like new">
+              <i data-lucide="sparkles"></i>
+              <span data-i18n="filters.shortcut_like_new">Like New</span>
+            </button>
+            <button class="filter-shortcut" type="button" data-filter-shortcut="sort" data-value="rating_desc">
+              <i data-lucide="star"></i>
+              <span data-i18n="filters.shortcut_top_rated">Top Rated</span>
+            </button>
+          </div>
+          <form id="filterForm" class="filter-form" autocomplete="off">
+            <label class="search-field">
+              <i data-lucide="search"></i>
+              <input
+                type="search"
+                id="searchInput"
+                data-i18n-placeholder="filters.search_placeholder"
+                placeholder="Try RTX 4070, 60% keyboard, 32GB RAM"
+              />
+            </label>
+            <label class="filter-group">
+              <span data-i18n="filters.category">Category</span>
+              <select id="categoryFilter" data-filter></select>
+            </label>
+            <label class="filter-group">
+              <span data-i18n="filters.location">Location</span>
+              <select id="locationFilter" data-filter></select>
+            </label>
+            <label class="filter-group">
+              <span data-i18n="filters.condition">Condition</span>
+              <select id="conditionFilter" data-filter>
+                <option value="" data-i18n="filters.all">All</option>
+                <option value="Brand new" data-i18n="filters.condition_new">Brand new</option>
+                <option value="Like new" data-i18n="filters.condition_like_new">Like new</option>
+                <option value="Good condition" data-i18n="filters.condition_good">Good condition</option>
+                <option value="Used" data-i18n="filters.condition_used">Used</option>
+              </select>
+            </label>
+            <label class="filter-group">
+              <span data-i18n="filters.price_range">Price Range</span>
+              <select id="priceFilter" data-filter>
+                <option value="" data-i18n="filters.all">All</option>
+                <option value="0-5000" data-i18n="filters.price_below_5k">Below 5,000</option>
+                <option value="5000-15000" data-i18n="filters.price_5k_15k">5,000 - 15,000</option>
+                <option value="15000-30000" data-i18n="filters.price_15k_30k">15,000 - 30,000</option>
+                <option value="30000+" data-i18n="filters.price_30k_plus">30,000+</option>
+              </select>
+            </label>
+            <label class="filter-group">
+              <span data-i18n="filters.sort_by">Sort By</span>
+              <select id="sortFilter" data-filter>
+                <option value="newest" data-i18n="filters.sort_newest">Newest first</option>
+                <option value="price_asc" data-i18n="filters.sort_price_asc">Price: Low to high</option>
+                <option value="price_desc" data-i18n="filters.sort_price_desc">Price: High to low</option>
+                <option value="rating_desc" data-i18n="filters.sort_rating">Top rated</option>
+              </select>
+            </label>
+          </form>
+          <div id="activeFilterBar" class="filter-active-bar" hidden>
+            <p id="activeFilterSummaryText" class="filter-active-summary"></p>
+            <div id="activeFilterChips" class="filter-chip-list"></div>
+          </div>
+        </section>
+
+        <section class="categories" id="categories">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow" data-i18n="categories.eyebrow">Top Categories</p>
+              <h2 data-i18n="categories.title">Shop by use case</h2>
+            </div>
+            <p class="muted" data-i18n="categories.subtitle">Only listings ready for real-world testing before handoff.</p>
+          </div>
+          <div id="categoryList" class="category-grid"></div>
+        </section>
+
+        <section class="products" id="products">
+          <div class="product-toolbar">
+            <div>
+              <p class="eyebrow" data-i18n="products.eyebrow">Latest Listings</p>
+              <h2 data-i18n="products.title">GoodCheck Certified</h2>
+            </div>
+            <div>
+              <p id="productResultCount" data-i18n="products.loading">Loading...</p>
+              <small data-i18n="products.updated">Updated every 15 minutes</small>
+            </div>
+          </div>
+          <div id="productGrid" class="product-grid"></div>
+          <div id="emptyState" class="empty-state" hidden>
+            <i data-lucide="package-search"></i>
+            <p data-i18n="products.empty_title">No products match the current filters.</p>
+            <small data-i18n="products.empty_hint">Try another price range or switch to a different category.</small>
+          </div>
+          <div id="productLoadMore" class="product-pagination" hidden>
+            <p id="productPaginationSummary" class="product-pagination__summary"></p>
+            <button id="loadMoreProductsBtn" class="outline-btn product-pagination__btn" type="button">
+              <i data-lucide="chevrons-down"></i>
+              <span data-i18n="products.load_more">Load more listings</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="highlight">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow" data-i18n="highlight.eyebrow">Featured Today</p>
+              <h2 data-i18n="highlight.title">Picked for value</h2>
+            </div>
+            <p class="muted" data-i18n="highlight.subtitle">Ranked by price, warranty, and seller score.</p>
+          </div>
+          <div id="featuredProduct" class="highlight-card"></div>
+        </section>
+
+        <section class="trust-center" id="trust-center">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow" data-i18n="trust.eyebrow">Trust Center</p>
+              <h2 data-i18n="trust.title">How every listing moves from upload to handoff</h2>
+            </div>
+            <p class="muted" data-i18n="trust.desc">
+              Clear operating standards make the marketplace feel reliable well
+              beyond a basic local listing site.
+            </p>
+          </div>
+          <div class="trust-center__layout">
+            <div class="process-panel">
+              <article class="process-step">
+                <span class="process-step__index">01</span>
+                <div>
+                  <h3 data-i18n="trust.step1_title">Seller onboarding</h3>
+                  <p data-i18n="trust.step1_desc">
+                    Account type, listing intent, and identity signals are
+                    captured before inventory goes live.
+                  </p>
+                </div>
+              </article>
+              <article class="process-step">
+                <span class="process-step__index">02</span>
+                <div>
+                  <h3 data-i18n="trust.step2_title">Listing verification</h3>
+                  <p data-i18n="trust.step2_desc">
+                    Condition notes, specs, warranty, and media are positioned
+                    as a structured pre-sale inspection story.
+                  </p>
+                </div>
+              </article>
+              <article class="process-step">
+                <span class="process-step__index">03</span>
+                <div>
+                  <h3 data-i18n="trust.step3_title">Protected transaction</h3>
+                  <p data-i18n="trust.step3_desc">
+                    Buyers reserve with more confidence thanks to clearer
+                    purchase language, review context, and fulfillment guidance.
+                  </p>
+                </div>
+              </article>
+              <article class="process-step">
+                <span class="process-step__index">04</span>
+                <div>
+                  <h3 data-i18n="trust.step4_title">Handoff and support</h3>
+                  <p data-i18n="trust.step4_desc">
+                    The platform sets expectations around delivery, response
+                    time, and post-sale issue handling from the start.
+                  </p>
+                </div>
+              </article>
+            </div>
+            <div class="policy-grid">
+              <article class="policy-card">
+                <div class="policy-card__icon">
+                  <i data-lucide="badge-check"></i>
+                </div>
+                <h3 data-i18n="trust.buyer_protection">Buyer Protection</h3>
+                <p data-i18n="trust.buyer_protection_desc">
+                  Clear pricing, inspection context, and warranty copy reduce
+                  ambiguity before payment is committed.
+                </p>
+              </article>
+              <article class="policy-card">
+                <div class="policy-card__icon">
+                  <i data-lucide="user-check"></i>
+                </div>
+                <h3 data-i18n="trust.seller_standards">Seller Standards</h3>
+                <p data-i18n="trust.seller_standards_desc">
+                  Verified seller treatment and profile trust signals now feel
+                  closer to a premium managed marketplace.
+                </p>
+              </article>
+              <article class="policy-card">
+                <div class="policy-card__icon">
+                  <i data-lucide="refresh-cw"></i>
+                </div>
+                <h3 data-i18n="trust.dispute_handling">Dispute Handling</h3>
+                <p data-i18n="trust.dispute_handling_desc">
+                  Support and follow-up language make conflict resolution part
+                  of the product experience, not an afterthought.
+                </p>
+              </article>
+              <article class="policy-card policy-card--feature">
+                <div class="policy-card__icon">
+                  <i data-lucide="globe"></i>
+                </div>
+                <h3 data-i18n="trust.international_tone">International Product Tone</h3>
+                <p data-i18n="trust.international_tone_desc">
+                  Typography, content hierarchy, trust blocks, and information
+                  density are moving toward the feel of an export-ready platform.
+                </p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="testimonials" id="reviews">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow" data-i18n="testimonials.eyebrow">Community Feedback</p>
+              <h2 data-i18n="testimonials.title">Professional buyers choose GoodCheck</h2>
+            </div>
+            <p class="muted" data-i18n="testimonials.desc">
+              KYC plus secure escrow protects every step of the transaction.
+            </p>
+          </div>
+          <div class="testimonial-grid">
+            <article class="testimonial-card">
+              <div class="rating">
+                <i data-lucide="star"></i>
+                <strong>4.9/5</strong>
+              </div>
+              <p data-i18n="testimonials.review1">
+                "The test report was incredibly detailed. I knew the real
+                condition before pickup and felt confident buying a higher-ticket item."
+              </p>
+              <footer>
+                <strong data-i18n="testimonials.review1_name">Pat</strong>
+                <span data-i18n="testimonials.review1_role">System Integrator</span>
+              </footer>
+            </article>
+            <article class="testimonial-card">
+              <div class="rating">
+                <i data-lucide="shield"></i>
+                <strong data-i18n="testimonials.review2_title">Secure Escrow</strong>
+              </div>
+              <p data-i18n="testimonials.review2">
+                "We placed the deposit in escrow first and released payment after QC.
+                It made cross-province purchasing far less stressful."
+              </p>
+              <footer>
+                <strong data-i18n="testimonials.review2_name">Kawin</strong>
+                <span data-i18n="testimonials.review2_role">IT Procurement</span>
+              </footer>
+            </article>
+            <article class="testimonial-card">
+              <div class="rating">
+                <i data-lucide="cpu"></i>
+                <strong data-i18n="testimonials.review3_title">Professional QC Team</strong>
+              </div>
+              <p data-i18n="testimonials.review3">
+                "GoodCheck handled the burn-in checks and water-cooling inspection
+                for us. It saved a huge amount of time at pickup."
+              </p>
+              <footer>
+                <strong data-i18n="testimonials.review3_name">Sai</strong>
+                <span data-i18n="testimonials.review3_role">Creator / Streamer</span>
+              </footer>
+            </article>
+          </div>
+        </section>
+
+        <section class="cta" id="contact">
+          <div class="cta-card">
+            <div>
+              <p class="eyebrow" data-i18n="cta.eyebrow">Start selling in 3 minutes</p>
+              <h2 data-i18n="cta.title">Upload your specs, pass verification, and reach matched buyers fast.</h2>
+              <ul>
+                <li>
+                  <i data-lucide="check-circle"></i>
+                  <span data-i18n="cta.feature1">Automatic market price suggestions</span>
+                </li>
+                <li>
+                  <i data-lucide="check-circle"></i>
+                  <span data-i18n="cta.feature2">Pickup and shipping flows with damage protection</span>
+                </li>
+                <li>
+                  <i data-lucide="check-circle"></i>
+                  <span data-i18n="cta.feature3">Real-time buyer activity dashboard</span>
+                </li>
+              </ul>
+            </div>
+            <div class="cta-actions">
+              <button class="primary-btn" id="ctaSellBtn">
+                <i data-lucide="upload"></i>
+                <span data-i18n="cta.btn_sell">Start Selling</span>
+              </button>
+              <button class="outline-btn" id="ctaTalkBtn">
+                <i data-lucide="messages-square"></i>
+                <span data-i18n="cta.btn_talk">Talk to the Team</span>
+              </button>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <strong>GoodCheck</strong>
+            <p data-i18n="footer.brand_desc">
+              Inspection-led marketplace for premium pre-owned computer gear,
+              tuned to feel more credible, global, and service-driven.
+            </p>
+            <div class="footer-badges">
+              <span data-i18n="footer.badge1">English-first UX</span>
+              <span data-i18n="footer.badge2">Protected handoff flow</span>
+              <span data-i18n="footer.badge3">Seller trust signals</span>
+            </div>
+          </div>
+          <div class="footer-column">
+            <h4 data-i18n="footer.marketplace">Marketplace</h4>
+            <a href="#products" data-i18n="footer.browse">Browse listings</a>
+            <a href="#categories" data-i18n="footer.explore">Explore categories</a>
+            <a href="#contact" data-i18n="footer.start_selling">Start selling</a>
+          </div>
+          <div class="footer-column">
+            <h4 data-i18n="footer.trust_center">Trust Center</h4>
+            <a href="#standards" data-i18n="footer.global_standards">Global standards</a>
+            <a href="#trust-center" data-i18n="footer.protection_flow">Protection flow</a>
+            <a href="#reviews" data-i18n="footer.buyer_feedback">Buyer feedback</a>
+          </div>
+          <div class="footer-column">
+            <h4 data-i18n="footer.support">Support</h4>
+            <a href="mailto:hello@goodcheck.io">hello@goodcheck.io</a>
+            <a href="tel:+66920000000">+66 92 000 0000</a>
+            <span data-i18n="footer.hours">Mon-Sun / 09:00-22:00 ICT</span>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p class="muted">
+            © <span id="currentYear"></span> <span data-i18n="footer.rights">GoodCheck. All rights reserved.</span>
+          </p>
+          <div class="footer-links">
+            <a href="#standards" data-i18n="footer.verification">Verification</a>
+            <a href="#trust-center" data-i18n="footer.protection">Protection</a>
+            <a href="#contact" data-i18n="footer.support">Support</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <div id="productModal" class="modal" aria-hidden="true">
+      <div class="modal__dialog modal__dialog--listing" role="dialog" aria-modal="true">
+        <header class="modal__header">
+          <div>
+            <p class="eyebrow" data-i18n="modal.new_listing">New Listing</p>
+            <h3 data-i18n="modal.enter_details">Enter product details</h3>
+          </div>
+          <button class="ghost-btn" id="closeModal">
+            <i data-lucide="x"></i>
+          </button>
+        </header>
+        <form
+          id="productForm"
+          class="modal__body modal__body--listing"
+          enctype="multipart/form-data"
+        >
+          <label>
+            <span data-i18n="modal.product_name">Product Name</span>
+            <input
+              type="text"
+              name="title"
+              required
+              data-i18n-placeholder="modal.product_name_placeholder"
+              placeholder="e.g. Ryzen 9 7950X"
+            />
+          </label>
+          <label>
+            <span data-i18n="modal.price_thb">Price (THB)</span>
+            <input type="number" name="price" min="0" step="100" required />
+          </label>
+          <label>
+            <span data-i18n="modal.category">Category</span>
+            <select name="category" required></select>
+          </label>
+          <label>
+            <span data-i18n="modal.location">Location</span>
+            <select name="location" required></select>
+          </label>
+          <label>
+            <span data-i18n="modal.condition">Condition</span>
+            <select name="condition" required>
+              <option value="Brand new" data-i18n="filters.condition_new">Brand new</option>
+              <option value="Like new" data-i18n="filters.condition_like_new">Like new</option>
+              <option value="Good condition" data-i18n="filters.condition_good">Good condition</option>
+              <option value="Used" data-i18n="filters.condition_used">Used</option>
+            </select>
+          </label>
+          <label>
+            <span data-i18n="modal.warranty">Warranty</span>
+            <input
+              type="text"
+              name="warranty"
+              data-i18n-placeholder="modal.warranty_placeholder"
+              placeholder="e.g. 7-day shop warranty"
+            />
+          </label>
+          <label class="field-span-2">
+            <span data-i18n="modal.product_image">Product Image</span>
+            <input
+              type="file"
+              name="image_file"
+              id="productImageFile"
+              multiple
+              accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
+            />
+            <small class="field-help" data-i18n="modal.image_help"
+              >Upload up to 6 JPG, PNG, WEBP, or GIF images. Listings stay in
+              review until an admin approves them.</small
+            >
+          </label>
+          <label class="field-span-2">
+            <span data-i18n="modal.extra_image">Optional Extra Image URL</span>
+            <input
+              type="url"
+              name="image_url"
+              id="productImageUrl"
+              data-i18n-placeholder="modal.extra_image_placeholder"
+              placeholder="https://example.com/your-product-image.jpg"
+            />
+            <small class="field-help" data-i18n="modal.extra_image_help"
+              >Use this only if you want to add one hosted image in addition to
+              the files you upload.</small
+            >
+          </label>
+          <div
+            id="productImagePreviewCard"
+            class="field-span-2 listing-image-preview is-empty"
+          >
+            <div
+              id="productImagePreviewGrid"
+              class="listing-image-preview__grid"
+            ></div>
+            <div class="listing-image-preview__meta">
+              <strong data-i18n="modal.gallery_preview">Listing image gallery preview</strong>
+              <p id="productImagePreviewLabel" data-i18n="modal.no_images">
+                No images selected yet. Upload a clear photo set so the admin
+                team can review your listing faster.
+              </p>
+            </div>
+          </div>
+          <label class="field-span-2">
+            <span data-i18n="modal.key_specs">Key Specs</span>
+            <textarea
+              name="specs"
+              rows="3"
+              data-i18n-placeholder="modal.specs_placeholder"
+              placeholder="Add one highlight per line, for example:
+12GB GDDR6X
+Box included
+FurMark tested"
+            ></textarea>
+            <small class="field-help" data-i18n="modal.specs_help"
+              >One spec per line. These will appear as quick-highlight chips.</small
+            >
+          </label>
+          <label class="field-span-2">
+            <span data-i18n="modal.additional_details">Additional Details</span>
+            <textarea
+              name="description"
+              rows="3"
+              data-i18n-placeholder="modal.details_placeholder"
+              placeholder="Share included accessories, usage history, or the reason for selling."
+            ></textarea>
+          </label>
+          <p class="field-help field-span-2" data-i18n="modal.review_notice">
+            Your listing will appear on the public marketplace after the admin
+            team approves the product details and image.
+          </p>
+          <button type="submit" class="primary-btn field-span-2">
+            <i data-lucide="send"></i>
+            <span data-i18n="modal.submit">Submit for Review</span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="modal" aria-hidden="true">
+      <div class="modal-content auth-modal">
+        <button class="modal-close" id="closeAuthModal">
+          <i data-lucide="x"></i>
+        </button>
+
+        <div class="auth-tabs">
+          <button class="auth-tab active" data-tab="login" data-i18n="auth.sign_in">Sign in</button>
+          <button class="auth-tab" data-tab="register" data-i18n="auth.create_account">Create Account</button>
+        </div>
+
+        <!-- Login Form -->
+        <form id="loginForm" class="auth-form active">
+          <h2>
+            <i
+              data-lucide="log-in"
+              style="margin-right: 10px; vertical-align: middle"
+            ></i
+            ><span data-i18n="auth.sign_in">Sign in</span>
+          </h2>
+          <label>
+            <span data-i18n="auth.email">Email</span>
+            <input
+              type="email"
+              name="email"
+              data-i18n-placeholder="auth.email_placeholder"
+              placeholder="your@email.com"
+              required
+            />
+          </label>
+          <label>
+            <span data-i18n="auth.password">Password</span>
+            <input
+              type="password"
+              name="password"
+              data-i18n-placeholder="auth.password_placeholder"
+              placeholder="••••••••"
+              required
+            />
+          </label>
+          <button type="submit" class="primary-btn">
+            <i data-lucide="arrow-right" style="margin-right: 8px"></i>
+            <span data-i18n="auth.sign_in">Sign In</span>
+          </button>
+          <p class="auth-hint">
+            <span data-i18n="auth.new_here">New here?</span>
+            <a
+              href="#"
+              onclick="
+                switchAuthTab('register');
+                return false;
+              "
+              data-i18n="auth.create_link"
+              >Create an account</a
+            >
+          </p>
+        </form>
+
+        <!-- Register Form -->
+        <form id="registerForm" class="auth-form">
+          <h2>
+            <i
+              data-lucide="user-plus"
+              style="margin-right: 10px; vertical-align: middle"
+            ></i
+            ><span data-i18n="auth.create_account">Create Account</span>
+          </h2>
+          <label>
+            <span data-i18n="auth.username">Username</span>
+            <input
+              type="text"
+              name="username"
+              data-i18n-placeholder="auth.username_placeholder"
+              placeholder="my_username"
+              required
+            />
+          </label>
+          <label>
+            <span data-i18n="auth.email">Email</span>
+            <input
+              type="email"
+              name="email"
+              data-i18n-placeholder="auth.email_placeholder"
+              placeholder="your@email.com"
+              required
+            />
+          </label>
+          <label>
+            <span data-i18n="auth.password">Password</span>
+            <input
+              type="password"
+              name="password"
+              data-i18n-placeholder="auth.password_placeholder"
+              placeholder="••••••••"
+              required
+            />
+          </label>
+          <label>
+            <span data-i18n="auth.account_type">Account Type</span>
+            <select name="user_type" required>
+              <option value="buyer" data-i18n="auth.type_buyer">Buyer</option>
+              <option value="seller" data-i18n="auth.type_seller">Seller</option>
+            </select>
+          </label>
+          <button type="submit" class="primary-btn">
+            <i data-lucide="check-circle" style="margin-right: 8px"></i>
+            <span data-i18n="auth.create_account">Create Account</span>
+          </button>
+          <p class="auth-hint">
+            <span data-i18n="auth.existing">Already have an account?</span>
+            <a
+              href="#"
+              onclick="
+                switchAuthTab('login');
+                return false;
+              "
+              data-i18n="auth.sign_in_link"
+              >Sign in</a
+            >
+          </p>
+        </form>
+      </div>
+    </div>
+
+    <!-- Product Detail Modal -->
+    <div id="productDetailModal" class="modal" aria-hidden="true">
+      <div
+        class="modal__dialog modal__dialog--wide"
+        role="dialog"
+        aria-modal="true"
+      >
+        <header class="modal__header">
+          <div>
+            <p class="eyebrow" data-i18n="modal.product_details">Product Details</p>
+            <h3 data-i18n="modal.listing_info">Listing Information</h3>
+          </div>
+          <button class="ghost-btn" id="closeProductDetail">
+            <i data-lucide="x"></i>
+          </button>
+        </header>
+        <div id="productDetailBody" class="modal__body detail-body">
+          <!-- Dynamic content injected by ui.js -->
+        </div>
+      </div>
+    </div>
+
+    <div id="chatModal" class="modal" aria-hidden="true">
+      <div
+        class="modal__dialog modal__dialog--chat"
+        role="dialog"
+        aria-modal="true"
+      >
+        <header class="modal__header">
+          <div>
+            <p class="eyebrow" data-i18n="chat.inbox">Inbox</p>
+            <h3 data-i18n="chat.messages_title">Buyer and Seller Messages</h3>
+          </div>
+          <button class="ghost-btn" id="closeChatModal">
+            <i data-lucide="x"></i>
+          </button>
+        </header>
+        <div class="chat-layout">
+          <aside class="chat-sidebar">
+            <div class="chat-sidebar__header">
+              <strong data-i18n="chat.conversations">Conversations</strong>
+              <small id="chatConversationCount" class="muted"></small>
+            </div>
+            <div id="chatConversationList" class="chat-conversation-list"></div>
+          </aside>
+          <section class="chat-panel">
+            <div id="chatPanelContent" class="chat-panel__content">
+              <div class="chat-empty-state">
+                <i data-lucide="messages-square"></i>
+                <h4 data-i18n="chat.select_title">Select a conversation</h4>
+                <p data-i18n="chat.select_desc">
+                  Open a listing and message the seller, or pick an existing
+                  conversation from the inbox.
+                </p>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <div id="adminModal" class="modal" aria-hidden="true">
+      <div
+        class="modal__dialog modal__dialog--admin"
+        role="dialog"
+        aria-modal="true"
+      >
+        <header class="modal__header">
+          <div>
+            <p class="eyebrow" data-i18n="admin.eyebrow">Admin Control</p>
+            <h3 data-i18n="admin.title">Moderation and Risk Oversight</h3>
+          </div>
+          <button class="ghost-btn" id="closeAdminModal">
+            <i data-lucide="x"></i>
+          </button>
+        </header>
+        <div id="adminPanelBody" class="admin-panel__body">
+          <div class="chat-empty-state">
+            <i data-lucide="shield-check"></i>
+            <h4 data-i18n="admin.loading_title">Loading admin console</h4>
+            <p data-i18n="admin.loading_desc">Preparing moderation queues, user controls, and audit logs.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="sellerHubModal" class="modal" aria-hidden="true">
+      <div
+        class="modal__dialog modal__dialog--seller"
+        role="dialog"
+        aria-modal="true"
+      >
+        <header class="modal__header">
+          <div>
+            <p class="eyebrow" data-i18n="seller.eyebrow">Seller Hub</p>
+            <h3 data-i18n="seller.title">Your Listings and Review Status</h3>
+          </div>
+          <button class="ghost-btn" id="closeSellerHubModal">
+            <i data-lucide="x"></i>
+          </button>
+        </header>
+        <div id="sellerHubBody" class="seller-hub__body">
+          <div class="chat-empty-state">
+            <i data-lucide="briefcase-business"></i>
+            <h4 data-i18n="seller.loading_title">Loading seller hub</h4>
+            <p data-i18n="seller.loading_desc">Preparing your listing status, review notes, and image gallery.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Onboarding Tour Modal ─── -->
+    <div class="tour-overlay" id="tourOverlay" aria-hidden="true">
+      <div class="tour-modal">
+        <div class="tour-progress" id="tourProgress"></div>
+        <button class="tour-close" id="tourClose" type="button" aria-label="Close tour">
+          <i data-lucide="x"></i>
+        </button>
+        <div class="tour-body" id="tourBody"></div>
+        <div class="tour-footer">
+          <div class="tour-dots" id="tourDots"></div>
+          <div class="tour-actions">
+            <button class="ghost-btn tour-btn" id="tourPrev" type="button">Back</button>
+            <button class="primary-btn tour-btn" id="tourNext" type="button">Next</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Payment Modal ─── -->
+    <div id="paymentModal" class="modal" aria-hidden="true">
+      <div class="modal__dialog modal__dialog--payment" role="dialog" aria-modal="true">
+        <header class="modal__header">
+          <div>
+            <p class="eyebrow" data-i18n="payment.modal_eyebrow">Secure Checkout</p>
+            <h3 data-i18n="payment.modal_title">Complete Your Purchase</h3>
+          </div>
+          <button class="ghost-btn" id="closePaymentModal">
+            <i data-lucide="x"></i>
+          </button>
+        </header>
+        <div id="paymentModalBody" class="modal__body pay-modal-body"></div>
+      </div>
+    </div>
+
+    <!-- ─── My Orders Modal ─── -->
+    <div id="ordersModal" class="modal" aria-hidden="true">
+      <div class="modal__dialog modal__dialog--orders" role="dialog" aria-modal="true">
+        <header class="modal__header">
+          <div>
+            <p class="eyebrow" data-i18n="orders.modal_eyebrow">Order Tracking</p>
+            <h3 data-i18n="orders.modal_title">My Orders</h3>
+          </div>
+          <button class="ghost-btn" id="closeOrdersModal">
+            <i data-lucide="x"></i>
+          </button>
+        </header>
+        <div id="ordersModalBody" class="orders-modal-body"></div>
+      </div>
+    </div>
+
+  </body>
+</html>
