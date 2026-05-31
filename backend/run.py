@@ -1,10 +1,11 @@
 import os
 from dotenv import load_dotenv
+
+# Load environment variables FIRST, before importing the app
+load_dotenv()
+
 from app import create_app
 from app.models import db, User, Product
-
-# Load environment variables
-load_dotenv()
 
 # Create Flask app
 app = create_app(os.getenv('FLASK_ENV', 'development'))
