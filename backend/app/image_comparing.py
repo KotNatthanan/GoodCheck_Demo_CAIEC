@@ -5,6 +5,7 @@ from flask import Blueprint, request, jsonify
 from pydantic import BaseModel, Field
 from google import genai
 from google.genai import types
+from flask_jwt_extended import jwt_required
 
 compare_bp = Blueprint("compare", __name__)
 
@@ -12,12 +13,11 @@ client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 MODEL = "gemini-2.5-flash"
 
 
-# ---------- Output schema ----------
 class MatchVerdict(str, Enum):
-    SAME_ITEM = "SAME_ITEM"            # literally the same physical object
-    SAME_PRODUCT = "SAME_PRODUCT"      # same model/SKU, but different unit
-    SAME_TYPE = "SAME_TYPE"            # same category, different product
-    DIFFERENT = "DIFFERENT"            # unrelated
+    SAME_ITEM = "SAME_ITEM"            
+    SAME_PRODUCT = "SAME_PRODUCT"     
+    SAME_TYPE = "SAME_TYPE"          
+    DIFFERENT = "DIFFERENT"           
 
 
 class AttributeMatch(BaseModel):
@@ -85,7 +85,7 @@ def compare_images():
                 response_schema=ComparisonResult,
             ),
         )
-        # resp.parsed is a ComparisonResult instance; resp.text is the raw JSON string
+        #JSON string
         return jsonify(resp.parsed.model_dump())
     except Exception as e:
         return jsonify({"error": str(e)}), 500
