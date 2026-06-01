@@ -271,3 +271,34 @@ export const getAdminOrders = async (filters = {}) => {
 export const updateAdminOrderStatus = async (orderId, status, trackingNote = "") => {
     return await apiCall(`/admin/orders/${orderId}/status`, "PUT", { status, tracking_note: trackingNote });
 };
+
+
+// image comparing api
+
+export const compareImages = async (image1, image2) => {
+    const formData = new FormData();
+    formData.append("image1", image1);
+    formData.append("image2", image2);
+
+    const headers = {};
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/compare`, {
+            method: "POST",
+            headers,
+            body: formData,
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            return {
+                error: true,
+                status: response.status,
+                message: payload.error || payload.message || `Failed with status ${response.status}.`,
+            };
+        }
+        return payload;
+    } catch (error) {
+        console.error("Compare Error:", error);
+        return { error: true, message: error.message || "Network error." };
+    }
+};
