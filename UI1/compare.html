@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Compare Images | GoodCheck</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css?v=20260328m" />
+    <script src="https://unpkg.com/lucide@0.263.1/dist/umd/lucide.js" defer></script>
+    <script type="module" src="js/compare-page.js?v=4"></script>
+  </head>
+  <body>
+    <div class="global-background" aria-hidden="true">
+      <div class="bg-grid"></div>
+      <div class="bg-glow bg-glow--one"></div>
+      <div class="bg-glow bg-glow--two"></div>
+    </div>
+    <div class="page">
+      <header class="top-nav">
+        <div class="top-nav__bar">
+          <a href="index.html" class="brand" style="text-decoration:none">
+            <div class="brand-mark">G</div>
+            <div>
+              <p class="brand-title">GoodCheck</p>
+              <p class="brand-subtitle">Trusted Pro Marketplace</p>
+            </div>
+          </a>
+          <a href="index.html" class="nav-text-btn">
+            <i data-lucide="arrow-left"></i>
+            <span>Back to marketplace</span>
+          </a>
+        </div>
+      </header>
+
+      <main>
+        <section class="comparing" id="comparing" style="padding-top:32px">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Image Verification</p>
+              <h2>Compare Two Product Images</h2>
+            </div>
+            <p class="muted">
+              Upload two photos to check if they show the same item, same model, or different products.
+            </p>
+          </div>
+          <div class="compare-card">
+                <div class="compare-grid">
+                <div class="compare-drop">
+                    <span>Image 1</span>
+                    <input type="file" id="compareImage1" accept="image/*" />
+                    <div class="compare-preview" id="comparePreview1"></div>
+                </div>
+                <div class="compare-drop">
+                    <span>Image 2</span>
+                    <input type="file" id="compareImage2" accept="image/*" />
+                    <div class="compare-preview" id="comparePreview2"></div>
+                </div>
+                </div>
+            <button class="primary-btn" id="runCompareBtn" style="width:100%;margin-top:16px">
+              <i data-lucide="scan-search"></i>
+              <span>Compare Images</span>
+            </button>
+            <div id="compareResult" class="compare-result" hidden></div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

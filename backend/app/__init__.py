@@ -11,6 +11,7 @@ from app.claim_routes import claims_bp
 from app.chat_routes import chats_bp
 from app.admin_routes import admin_bp
 from app.seller_review_routes import seller_reviews_bp
+from app.image_comparing import compare_bp
 from app.errors import register_error_handlers
 from app.runtime_setup import ensure_default_admin, ensure_runtime_schema
 import os
@@ -42,6 +43,8 @@ def create_app(config_name='development'):
     app.register_blueprint(chats_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(seller_reviews_bp)
+
+    app.register_blueprint(compare_bp, url_prefix="/api")
 
     # Register error handlers
     register_error_handlers(app)
