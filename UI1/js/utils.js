@@ -24,7 +24,7 @@ export const formatPrice = (value) => {
         style: "currency",
         currency,
         currencyDisplay: "narrowSymbol",
-        maximumFractionDigits: currency === "USD" ? 2 : 0,
+        maximumFractionDigits: ["USD", "SGD"].includes(currency) ? 2 : 0,
     }).format(converted);
 };
 

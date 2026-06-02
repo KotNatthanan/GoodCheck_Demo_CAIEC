@@ -148,6 +148,7 @@ const renderOrderCard = (order) => {
         <div class="order-card__right">
           <p class="price-tag">${formatPrice(order.total_price)}</p>
           <span class="order-status-badge order-status-badge--${order.status}">${label}</span>
+          <span class="badge">Escrow: ${escapeHtml(order.escrow_status || "pending")}</span>
         </div>
       </div>
       ${timelineHtml}
@@ -176,7 +177,15 @@ const renderBuyerClaimPanel = (order, sellerName) => {
         <p class="order-review-panel__copy">${t("orders.claim_submitted_copy", { seller: sellerName })}</p>
         <div class="order-review-note">
           <strong>${t(`orders.claim_reason_${claim.reason}`)}</strong>
+          <small>${t("orders.claim_requested_resolution", "Requested resolution")}: ${escapeHtml(claim.requested_resolution || "review")}</small>
           <p>${escapeHtml(claim.details)}</p>
+          ${
+            claim.evidence_urls?.length
+              ? `<div class="claim-evidence-list">
+                   ${claim.evidence_urls.map((url) => `<a href="${escapeHtml(url)}" target="_blank" rel="noreferrer">${t("orders.claim_evidence_link", "Evidence")}</a>`).join("")}
+                 </div>`
+              : ""
+          }
           ${
             claim.admin_note
               ? `<div class="order-claim-admin-note">
@@ -211,6 +220,19 @@ const renderBuyerClaimPanel = (order, sellerName) => {
             <option value="seller_misrepresentation">${t("orders.claim_reason_seller_misrepresentation")}</option>
             <option value="other">${t("orders.claim_reason_other")}</option>
           </select>
+        </label>
+        <label>
+          ${t("orders.claim_resolution", "Requested resolution")}
+          <select name="requested_resolution" required>
+            <option value="refund">${t("orders.claim_resolution_refund", "Refund payment")}</option>
+            <option value="release_funds">${t("orders.claim_resolution_release", "Release funds to seller")}</option>
+            <option value="replacement">${t("orders.claim_resolution_replacement", "Replacement or missing part")}</option>
+            <option value="review">${t("orders.claim_resolution_review", "Admin review only")}</option>
+          </select>
+        </label>
+        <label>
+          ${t("orders.claim_evidence_url", "Evidence URL")}
+          <input name="evidence_url" type="url" placeholder="https://..." />
         </label>
         <label>
           ${t("orders.claim_details")}
@@ -321,6 +343,8 @@ const bindOrderActions = () => {
       const result = await createBuyerClaim(orderId, {
         reason: fd.get("reason"),
         details: fd.get("details"),
+        requested_resolution: fd.get("requested_resolution"),
+        evidence_urls: fd.get("evidence_url") ? [fd.get("evidence_url")] : [],
       });
 
       if (result?.buyer_claim) {

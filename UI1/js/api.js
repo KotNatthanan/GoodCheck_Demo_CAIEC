@@ -198,6 +198,10 @@ export const getAdminOverview = async () => {
     return await apiCall("/admin/overview");
 };
 
+export const getAdminRiskDashboard = async (limit = 10) => {
+    return await apiCall(`/admin/risk-dashboard?limit=${limit}`);
+};
+
 export const getAdminProducts = async (filters = {}) => {
     const params = new URLSearchParams({
         moderation_status: filters.moderation_status || "pending",
@@ -241,6 +245,14 @@ export const getAdminLogs = async (limit = 20) => {
     return await apiCall(`/admin/logs?limit=${limit}`);
 };
 
+export const getVerificationEvents = async (limit = 20) => {
+    return await apiCall(`/admin/verification-events?limit=${limit}`);
+};
+
+export const submitVerificationFeedback = async (eventId, payload) => {
+    return await apiCall(`/admin/verification-events/${eventId}/feedback`, "PUT", payload);
+};
+
 // --- Review APIs ---
 export const addReview = async (productId, reviewData) => {
     return await apiCall(`/products/${productId}/reviews`, "POST", reviewData);
@@ -279,8 +291,13 @@ export const compareImages = async (image1, image2) => {
     const formData = new FormData();
     formData.append("image1", image1);
     formData.append("image2", image2);
+    formData.append("source", "compare_page");
 
     const headers = {};
+    const token = getToken();
+    if (token) {
+        headers.Authorization = `Bearer ${token}`;
+    }
 
     try {
         const response = await fetch(`${API_BASE_URL}/compare`, {
