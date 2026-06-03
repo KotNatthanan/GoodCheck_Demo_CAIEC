@@ -105,6 +105,8 @@ class Product(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    embedding = db.Column(db.JSON, nullable=True)
+
     reviews = db.relationship('Review', backref='product', lazy=True, cascade='all, delete-orphan')
     reviewed_by_admin = db.relationship('User', foreign_keys=[reviewed_by], backref='reviewed_products')
 
