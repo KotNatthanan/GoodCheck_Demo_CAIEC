@@ -97,17 +97,20 @@ def _product_context(query, top_k=6):
     if qvec:
         ranked = sorted(products, key=lambda p: cosine(qvec, p.embedding), reverse=True)
     else:
-        ranked = products  #fallback
+        ranked = products  # fallback
 
     top = ranked[:top_k]
     lines = []
     for p in top:
         specs = ", ".join(p.specs) if isinstance(p.specs, list) else (p.specs or "")
+        desc = (p.description or "").strip()
+        if len(desc) > 200:
+            desc = desc[:200] + "…"
         lines.append(
             f"- {p.title} | category: {p.category} | price: {p.price} THB | "
-            f"condition: {p.condition} | location: {p.location} | "
+            f"condition: {p.condition} | status: {p.status} | location: {p.location} | "
             f"warranty: {p.warranty or 'none'} | specs: {specs} | "
-            f"reviews: {_format_reviews(p)}"
+            f"description: {desc} | reviews: {_format_reviews(p)}"
         )
     return "Most relevant listings for this query:\n" + "\n".join(lines)
 
@@ -149,6 +152,11 @@ def chatbot():
         return jsonify({"error": "message is required"}), 400
 
     product_ctx = _product_context(message)
+
+    recent_user_msgs = [t.get("text", "") for t in history[-4:] if t.get("role") == "user"]
+    search_query = " ".join(recent_user_msgs + [message])
+
+    product_ctx = _product_context(search_query) 
     order_ctx = _order_context()
 
     context_block = f"{POLICIES}\n\n{product_ctx}"
