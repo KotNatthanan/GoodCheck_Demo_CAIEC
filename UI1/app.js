@@ -14,6 +14,7 @@ import {
   bindProductDetailModal,
   handleProductFormSubmit,
   bindHelpers,
+  openProductDetailModal
 } from "./js/ui.js";
 import { bindChatModal } from "./js/chat.js";
 import { bindAdminPanel } from "./js/admin.js";
@@ -30,6 +31,7 @@ import { initTour } from "./js/tour.js";
 import { bindPaymentModal } from "./js/payment.js";
 import { bindOrdersModal } from "./js/orders.js";
 
+window.openProductDetail = openProductDetailModal;
 
 const init = async () => {
   // Initialise i18n first — load locale JSON + translate static DOM

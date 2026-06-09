@@ -73,6 +73,7 @@ async function send() {
   } else {
     thinking.textContent = res.reply;
     history.push({ role: "assistant", text: res.reply });
+    if (Array.isArray(res.products) && res.products.length) renderProducts(thinking, res.products);
   }
   $("gcBotSend").disabled = false;
   $("gcBotText").focus();
@@ -82,4 +83,29 @@ if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", mount);
 } else {
   mount();
+}
+
+function goToProduct(id) {
+  if (typeof window.openProductDetail === "function") {
+    window.openProductDetail(id);
+    $("gcBotPanel").hidden = true;
+    return;
+  }
+  window.location.href = `index.html?product=${encodeURIComponent(id)}`;
+}
+
+function renderProducts(msgEl, products) {
+  const wrap = document.createElement("div");
+  wrap.style.cssText = "display:flex;flex-direction:column;gap:6px;margin-top:8px";
+  products.forEach((p) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.style.cssText = "text-align:left;cursor:pointer;border:1px solid rgba(148,163,184,.4);border-radius:10px;padding:8px 10px;background:rgba(148,163,184,.08);color:inherit";
+    const price = Number(p.price);
+    btn.textContent = p.title + (Number.isFinite(price) ? ` — ฿${price.toLocaleString()} · View →` : " · View →");
+    btn.addEventListener("click", () => goToProduct(p.id));
+    wrap.appendChild(btn);
+  });
+  msgEl.appendChild(wrap);
+  $("gcBotMessages").scrollTop = $("gcBotMessages").scrollHeight;
 }

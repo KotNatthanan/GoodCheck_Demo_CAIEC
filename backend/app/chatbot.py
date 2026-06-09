@@ -78,8 +78,18 @@ def product_to_text(p):
         f"Specs: {specs}. {p.description or ''}"
     )
 
+def _mentioned_products(reply, candidates, limit=4):
+    reply_lower = (reply or "").lower()
+    seen, out = set(), []
+    for p in candidates:
+        if p.title and p.title.lower() in reply_lower and p.id not in seen:
+            seen.add(p.id)
+            out.append({"id": p.id, "title": p.title, "price": p.price})
+            if len(out) >= limit:
+                break
+    return out
+
 def _product_context(query, top_k=6):
-    """Semantic search: embed the query, rank available products by cosine similarity."""
     products = Product.query.filter(
         Product.moderation_status == "approved",
         Product.status == "available",
@@ -87,7 +97,7 @@ def _product_context(query, top_k=6):
     ).all()
 
     if not products:
-        return "No products are currently available in the catalog."
+        return "No products are currently available in the catalog.", []
 
     try:
         qvec = embed_text(query)
@@ -112,7 +122,7 @@ def _product_context(query, top_k=6):
             f"warranty: {p.warranty or 'none'} | specs: {specs} | "
             f"description: {desc} | reviews: {_format_reviews(p)}"
         )
-    return "Most relevant listings for this query:\n" + "\n".join(lines)
+    return "Most relevant listings for this query:\n" + "\n".join(lines), top
 
 def _order_context():
     try:
@@ -151,12 +161,10 @@ def chatbot():
     if not message:
         return jsonify({"error": "message is required"}), 400
 
-    product_ctx = _product_context(message)
-
     recent_user_msgs = [t.get("text", "") for t in history[-4:] if t.get("role") == "user"]
     search_query = " ".join(recent_user_msgs + [message])
 
-    product_ctx = _product_context(search_query) 
+    product_ctx, candidates = _product_context(search_query)
     order_ctx = _order_context()
 
     context_block = f"{POLICIES}\n\n{product_ctx}"
@@ -177,6 +185,8 @@ def chatbot():
             model=MODEL,
             contents="\n".join(contents),
         )
-        return jsonify({"reply": resp.text}), 200
+        reply = resp.text
+        return jsonify({"reply": reply, "products": _mentioned_products(reply, candidates)}), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+            import traceback; traceback.print_exc()
+            return jsonify({"error": str(e)}), 500
