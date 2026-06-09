@@ -3,13 +3,38 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Compare Images | GoodCheck</title>
+    <title>Compare Items | GoodCheck</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css?v=20260328m" />
     <script src="https://unpkg.com/lucide@0.263.1/dist/umd/lucide.js" defer></script>
-    <script type="module" src="js/compare-page.js?v=4"></script>
+    <!-- Four-side logic. compare-page.js imports ./api.js, so api.js must live in /js. -->
+    <script type="module" src="js/compare-page.js?v=5"></script>
+    <style>
+      .cmp-sides{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:8px}
+      .cmp-group h3{margin:0 0 10px;font-size:14px;opacity:.8}
+      .cmp-grid4{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+      /* results */
+      .cmp-final{display:flex;justify-content:space-between;align-items:center;gap:12px;border:2px solid;border-radius:12px;padding:14px 16px;margin:18px 0 14px}
+      .cmp-final strong{font-size:18px;letter-spacing:.4px}
+      .cmp-final-meta{display:flex;gap:14px;font-size:13px;opacity:.8}
+      .cmp-flags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+      .cmp-flag{font-size:12px;padding:3px 10px;border-radius:999px;color:#fff}
+      .cmp-side{border:1px solid rgba(148,163,184,.35);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+      .cmp-side-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px}
+      .cmp-pill{font-size:12px;padding:3px 10px;border-radius:999px;color:#fff;text-transform:capitalize}
+      .cmp-conf{font-size:12px;opacity:.75}
+      .cmp-reason{font-size:13px;margin:6px 0;opacity:.9}
+      .cmp-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
+      .cmp-table th,.cmp-table td{border:1px solid rgba(148,163,184,.25);padding:4px 6px;text-align:left}
+      .cmp-lists{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px;font-size:12px}
+      .cmp-lists h5{margin:0 0 4px;opacity:.7}
+      .cmp-lists ul{margin:0;padding-left:16px}
+      .cmp-err{color:#dc2626}
+      @media(max-width:780px){.cmp-sides{grid-template-columns:1fr}}
+      @media(max-width:560px){.cmp-grid4{grid-template-columns:1fr}.cmp-lists{grid-template-columns:1fr}}
+    </style>
   </head>
   <body>
     <div class="global-background" aria-hidden="true">
@@ -39,33 +64,88 @@
           <div class="section-header">
             <div>
               <p class="eyebrow">Image Verification</p>
-              <h2>Compare Two Product Images</h2>
+              <h2>Compare an item from four sides</h2>
             </div>
             <p class="muted">
-              Upload two photos to check if they show the same item, same model, or different products.
+              Upload the front, back, left, and right of the listing photos and
+              the item received. Each side is checked for unique scratches,
+              serials, and wear before a verdict is given.
             </p>
           </div>
           <div class="compare-card">
-                <div class="compare-grid">
-                <div class="compare-drop">
-                    <span>Image 1</span>
-                    <input type="file" id="compareImage1" accept="image/*" />
-                    <div class="compare-preview" id="comparePreview1"></div>
+            <p class="muted" style="margin:0 0 14px;font-size:13px">
+              You must be signed in for this check to run. If you see an
+              authentication error, sign in on the marketplace first.
+            </p>
+
+            <div class="cmp-sides">
+              <div class="cmp-group">
+                <h3>Listing photos</h3>
+                <div class="cmp-grid4">
+                  <div class="compare-drop">
+                    <span>Front</span>
+                    <input type="file" id="cmpListingFront" accept="image/*" />
+                    <div class="compare-preview" id="prevListingFront"></div>
+                  </div>
+                  <div class="compare-drop">
+                    <span>Back</span>
+                    <input type="file" id="cmpListingBack" accept="image/*" />
+                    <div class="compare-preview" id="prevListingBack"></div>
+                  </div>
+                  <div class="compare-drop">
+                    <span>Left</span>
+                    <input type="file" id="cmpListingLeft" accept="image/*" />
+                    <div class="compare-preview" id="prevListingLeft"></div>
+                  </div>
+                  <div class="compare-drop">
+                    <span>Right</span>
+                    <input type="file" id="cmpListingRight" accept="image/*" />
+                    <div class="compare-preview" id="prevListingRight"></div>
+                  </div>
                 </div>
-                <div class="compare-drop">
-                    <span>Image 2</span>
-                    <input type="file" id="compareImage2" accept="image/*" />
-                    <div class="compare-preview" id="comparePreview2"></div>
+              </div>
+
+              <div class="cmp-group">
+                <h3>Item received</h3>
+                <div class="cmp-grid4">
+                  <div class="compare-drop">
+                    <span>Front</span>
+                    <input type="file" id="cmpIncomingFront" accept="image/*" />
+                    <div class="compare-preview" id="prevIncomingFront"></div>
+                  </div>
+                  <div class="compare-drop">
+                    <span>Back</span>
+                    <input type="file" id="cmpIncomingBack" accept="image/*" />
+                    <div class="compare-preview" id="prevIncomingBack"></div>
+                  </div>
+                  <div class="compare-drop">
+                    <span>Left</span>
+                    <input type="file" id="cmpIncomingLeft" accept="image/*" />
+                    <div class="compare-preview" id="prevIncomingLeft"></div>
+                  </div>
+                  <div class="compare-drop">
+                    <span>Right</span>
+                    <input type="file" id="cmpIncomingRight" accept="image/*" />
+                    <div class="compare-preview" id="prevIncomingRight"></div>
+                  </div>
                 </div>
-                </div>
+              </div>
+            </div>
+
             <button class="primary-btn" id="runCompareBtn" style="width:100%;margin-top:16px">
               <i data-lucide="scan-search"></i>
-              <span>Compare Images</span>
+              <span>Compare all sides</span>
             </button>
             <div id="compareResult" class="compare-result" hidden></div>
           </div>
         </section>
       </main>
     </div>
+
+    <script>
+      window.addEventListener("DOMContentLoaded", () => {
+        if (window.lucide) window.lucide.createIcons();
+      });
+    </script>
   </body>
 </html>

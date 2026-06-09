@@ -8,6 +8,7 @@ from app.review_routes import reviews_bp
 from app.favorite_routes import favorites_bp
 from app.order_routes import orders_bp
 from app.claim_routes import claims_bp
+from app.chatbot import chatbot_bp          
 from app.chat_routes import chats_bp
 from app.admin_routes import admin_bp
 from app.seller_review_routes import seller_reviews_bp
@@ -45,6 +46,7 @@ def create_app(config_name='development'):
     app.register_blueprint(seller_reviews_bp)
 
     app.register_blueprint(compare_bp, url_prefix="/api")
+    app.register_blueprint(chatbot_bp, url_prefix="/api")   
 
     # Register error handlers
     register_error_handlers(app)

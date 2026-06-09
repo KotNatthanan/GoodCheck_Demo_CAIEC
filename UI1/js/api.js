@@ -293,6 +293,9 @@ export const compareImages = async (image1, image2) => {
     formData.append("image2", image2);
     formData.append("source", "compare_page");
 
+// Shared multipart POST. No Content-Type header — the browser must set the
+// multipart boundary itself for FormData. Matches the uploadProductImage 401 flow.
+const sendImageForm = async (endpoint, formData) => {
     const headers = {};
     const token = getToken();
     if (token) {
@@ -300,17 +303,25 @@ export const compareImages = async (image1, image2) => {
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/compare`, {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
             method: "POST",
             headers,
             body: formData,
         });
         const payload = await response.json().catch(() => ({}));
         if (!response.ok) {
+            if (response.status === 401) {
+                removeToken();
+                localStorage.removeItem("current_user");
+            }
             return {
                 error: true,
                 status: response.status,
-                message: payload.error || payload.message || `Failed with status ${response.status}.`,
+                message:
+                    payload.error ||
+                    payload.message ||
+                    payload.msg ||
+                    `Failed with status ${response.status}.`,
             };
         }
         return payload;
