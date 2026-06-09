@@ -275,25 +275,38 @@ export const updateAdminOrderStatus = async (orderId, status, trackingNote = "")
 
 // image comparing api
 
-export const compareImages = async (image1, image2) => {
-    const formData = new FormData();
-    formData.append("image1", image1);
-    formData.append("image2", image2);
+// --- Image comparing APIs ---
+// Replace the existing `// image comparing api` block in api.js with this.
 
+// Shared multipart POST. No Content-Type header — the browser must set the
+// multipart boundary itself for FormData. Matches the uploadProductImage 401 flow.
+const sendImageForm = async (endpoint, formData) => {
     const headers = {};
+    const token = getToken();
+    if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+    }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/compare`, {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
             method: "POST",
             headers,
             body: formData,
         });
         const payload = await response.json().catch(() => ({}));
         if (!response.ok) {
+            if (response.status === 401) {
+                removeToken();
+                localStorage.removeItem("current_user");
+            }
             return {
                 error: true,
                 status: response.status,
-                message: payload.error || payload.message || `Failed with status ${response.status}.`,
+                message:
+                    payload.error ||
+                    payload.message ||
+                    payload.msg ||
+                    `Failed with status ${response.status}.`,
             };
         }
         return payload;
@@ -301,4 +314,29 @@ export const compareImages = async (image1, image2) => {
         console.error("Compare Error:", error);
         return { error: true, message: error.message || "Network error." };
     }
+};
+
+// Single pair: POST /api/compare
+export const compareImages = async (image1, image2) => {
+    const formData = new FormData();
+    formData.append("image1", image1);
+    formData.append("image2", image2);
+    return sendImageForm("/compare", formData);
+};
+
+// Four sides: POST /api/compare/sides
+//   listing  = { front: File, back: File, left: File, right: File }
+//   incoming = { front: File, back: File, left: File, right: File }
+export const compareSides = async (listing, incoming) => {
+    const formData = new FormData();
+    for (const side of ["front", "back", "left", "right"]) {
+        if (listing[side]) formData.append(`listing_${side}`, listing[side]);
+        if (incoming[side]) formData.append(`incoming_${side}`, incoming[side]);
+    }
+    return sendImageForm("/compare/sides", formData);
+};
+
+//chat bot ai
+export const askChatbot = async (message, history = []) => {
+    return await apiCall("/chatbot", "POST", { message, history });
 };
