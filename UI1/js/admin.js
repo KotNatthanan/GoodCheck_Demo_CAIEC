@@ -4,9 +4,12 @@ import {
   getAdminOrders,
   getAdminOverview,
   getAdminProducts,
+  getAdminRiskDashboard,
   getAdminUsers,
+  getVerificationEvents,
   getToken,
   moderateProduct,
+  submitVerificationFeedback,
   updateAdminClaim,
   updateAdminOrderStatus,
   updateAdminUser,
@@ -32,6 +35,9 @@ let userStatusFilter = "all";
 let userTypeFilter = "all";
 let userSearch = "";
 let claimStatusFilter = "open";
+
+const riskClass = (level = "low") => `risk-badge risk-badge--${level}`;
+const riskLabel = (risk) => `${String(risk?.level || "low").toUpperCase()} ${Number(risk?.score || 0)}%`;
 
 const setAdminModalVisibility = (isVisible) => {
   const modal = byId("adminModal");
@@ -115,10 +121,14 @@ const renderProductCards = (products) => {
               <p class="muted">${escapeHtml(sellerName)} · ${escapeHtml(product.category)}</p>
             </div>
             <div class="admin-badges">
+              <span class="${riskClass(product.risk?.level)}">${riskLabel(product.risk)}</span>
               <span class="badge">${formatPrice(product.price)}</span>
               <span class="badge">${escapeHtml(product.status || "available")}</span>
               <span class="badge">${galleryImages.length} image${galleryImages.length === 1 ? "" : "s"}</span>
             </div>
+          </div>
+          <div class="risk-reason-list">
+            ${(product.risk?.reasons || []).slice(0, 3).map(reason => `<span>${escapeHtml(reason)}</span>`).join("")}
           </div>
           <p>${escapeHtml(product.description || "No description provided.")}</p>
           <div class="admin-meta-row">
@@ -228,6 +238,119 @@ const renderLogs = (logs) => {
     .join("");
 };
 
+const renderRiskDashboard = (riskDashboard = {}) => {
+  const summary = riskDashboard.summary || {};
+  const riskyProducts = riskDashboard.risky_products || [];
+  const duplicateGroups = riskDashboard.duplicate_image_groups || [];
+
+  return `
+    <div class="admin-summary-grid">
+      <article class="admin-summary-card">
+        <small>High-risk listings</small>
+        <strong>${summary.high_risk_listings || 0}</strong>
+        <span>Listings requiring immediate review</span>
+      </article>
+      <article class="admin-summary-card">
+        <small>Duplicate image groups</small>
+        <strong>${summary.duplicate_image_groups || 0}</strong>
+        <span>Potential reposts or copied listing images</span>
+      </article>
+      <article class="admin-summary-card">
+        <small>Escrow value held</small>
+        <strong>${formatPrice(summary.escrow_holding_value || 0)}</strong>
+        <span>Protected order value not released yet</span>
+      </article>
+      <article class="admin-summary-card">
+        <small>AI reviewed pairs</small>
+        <strong>${summary.ai_reviewed_pairs || 0}</strong>
+        <span>${summary.feedback_accuracy == null ? "Feedback accuracy pending" : `${summary.feedback_accuracy}% feedback accuracy`}</span>
+      </article>
+    </div>
+    <div class="admin-card-grid">
+      <article class="admin-card">
+        <div class="admin-card__top">
+          <div>
+            <p class="eyebrow">Risk Queue</p>
+            <h4>Listings to inspect first</h4>
+          </div>
+        </div>
+        <div class="risk-list">
+          ${
+            riskyProducts.length
+              ? riskyProducts.slice(0, 6).map(product => `
+                <div class="risk-row">
+                  <div>
+                    <strong>${escapeHtml(product.title)}</strong>
+                    <p>${escapeHtml(product.seller?.username || product.seller?.full_name || "Seller")} · ${escapeHtml(product.category || "")}</p>
+                  </div>
+                  <span class="${riskClass(product.risk?.level)}">${riskLabel(product.risk)}</span>
+                </div>
+              `).join("")
+              : `<div class="admin-empty admin-empty--compact"><p>No elevated listing risks detected.</p></div>`
+          }
+        </div>
+      </article>
+      <article class="admin-card">
+        <div class="admin-card__top">
+          <div>
+            <p class="eyebrow">Image Reuse</p>
+            <h4>Duplicate image signals</h4>
+          </div>
+        </div>
+        <div class="risk-list">
+          ${
+            duplicateGroups.length
+              ? duplicateGroups.slice(0, 4).map(group => `
+                <div class="risk-row">
+                  <img src="${escapeHtml(group.image_url)}" alt="Duplicate listing evidence" loading="lazy" />
+                  <div>
+                    <strong>${group.products.length} listings share this image</strong>
+                    <p>${group.products.map(product => `#${product.id} ${escapeHtml(product.title)}`).join(" · ")}</p>
+                  </div>
+                </div>
+              `).join("")
+              : `<div class="admin-empty admin-empty--compact"><p>No duplicate product images found.</p></div>`
+          }
+        </div>
+      </article>
+    </div>
+  `;
+};
+
+const renderVerificationEvents = (eventsPayload = {}) => {
+  const events = eventsPayload.events || [];
+  if (!events.length) {
+    return `<div class="admin-empty"><p>No AI verification events recorded yet. Run Compare Images to build the dataset.</p></div>`;
+  }
+
+  return `
+    <div class="admin-card-grid">
+      ${events.map((event) => `
+        <article class="admin-card verification-event-card">
+          <div class="admin-card__top">
+            <div>
+              <p class="eyebrow">Event #${event.id} · ${event.created_at ? timeAgo(event.created_at) : ""}</p>
+              <h4>${escapeHtml(String(event.verdict || "").replace(/_/g, " "))}</h4>
+              <p class="muted">${escapeHtml(event.product_category || "Unknown category")} · ${escapeHtml(event.image1_name || "Image 1")} vs ${escapeHtml(event.image2_name || "Image 2")}</p>
+            </div>
+            <div class="admin-badges">
+              <span class="badge">${event.overall_similarity}% visual</span>
+              <span class="badge">${event.same_item_confidence}% same item</span>
+              ${event.feedback_label ? `<span class="trust-badge">${escapeHtml(event.feedback_label)}</span>` : `<span class="badge">No feedback</span>`}
+            </div>
+          </div>
+          <p>${escapeHtml(event.reasoning || "No reasoning recorded.")}</p>
+          <div class="admin-actions">
+            <button class="outline-btn" data-verification-feedback="correct" data-event-id="${event.id}">Correct</button>
+            <button class="outline-btn" data-verification-feedback="wrong" data-event-id="${event.id}">Wrong</button>
+            <button class="ghost-btn" data-verification-feedback="needs_review" data-event-id="${event.id}">Needs review</button>
+          </div>
+        </article>
+      `).join("")}
+    </div>
+  `;
+};
+
 const bindAdminActions = () => {
   byId("adminProductFilter")?.addEventListener("change", (event) => {
     productFilter = event.target.value;
@@ -308,10 +431,34 @@ const bindAdminActions = () => {
     });
   });
 
+  document.querySelectorAll("[data-verification-feedback]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const eventId = Number(button.dataset.eventId);
+      const feedbackLabel = button.dataset.verificationFeedback;
+      button.disabled = true;
+      const originalText = button.textContent;
+      button.textContent = "Saving…";
+
+      const result = await submitVerificationFeedback(eventId, {
+        feedback_label: feedbackLabel,
+      });
+
+      if (!result || result.error) {
+        showToast(result?.message || "Unable to save verification feedback.", "error");
+        button.disabled = false;
+        button.textContent = originalText;
+        return;
+      }
+
+      showToast("Verification feedback saved.", "success");
+      await loadAdminPanel();
+    });
+  });
+
   refreshIcons();
 };
 
-const renderAdminPanel = (overview, productQueue, users, logs) => {
+const renderAdminPanel = (overview, productQueue, users, logs, riskDashboard, verificationEvents) => {
   const body = byId("adminPanelBody");
   if (!body) return;
 
@@ -354,7 +501,27 @@ const renderAdminPanel = (overview, productQueue, users, logs) => {
             <strong>${overview.engagement?.chat_messages || 0}</strong>
             <span>Total message volume across the marketplace</span>
           </article>
+          <article class="admin-summary-card">
+            <small>AI reviewed pairs</small>
+            <strong>${overview.impact?.ai_reviewed_pairs || 0}</strong>
+            <span>Image comparisons stored for model improvement</span>
+          </article>
+          <article class="admin-summary-card">
+            <small>Admin time saved</small>
+            <strong>${overview.impact?.estimated_admin_minutes_saved || 0}m</strong>
+            <span>Estimated manual image triage avoided</span>
+          </article>
         </div>
+      </section>
+
+      <section class="admin-section">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">Fraud Intelligence</p>
+            <h2>Risk signals and impact metrics</h2>
+          </div>
+        </div>
+        ${renderRiskDashboard(riskDashboard)}
       </section>
 
       <section class="admin-section">
@@ -463,6 +630,16 @@ const renderAdminPanel = (overview, productQueue, users, logs) => {
       <section class="admin-section">
         <div class="section-header">
           <div>
+            <p class="eyebrow">AI Verification Dataset</p>
+            <h2>Recent image comparison events</h2>
+          </div>
+        </div>
+        ${renderVerificationEvents(verificationEvents)}
+      </section>
+
+      <section class="admin-section">
+        <div class="section-header">
+          <div>
             <p class="eyebrow">Audit Trail</p>
             <h2>Recent admin actions</h2>
           </div>
@@ -553,6 +730,7 @@ const loadAdminOrders = async () => {
           <strong>Order #${o.id}</strong>
           <p>${o.product?.title || ""}</p>
           <span class="badge order-status-badge--${o.status}">${STATUS_LABEL_ADMIN[o.status] || o.status}</span>
+          <span class="badge">Escrow: ${escapeHtml(o.escrow_status || "pending")}</span>
           ${o.tracking_note ? `<p class="muted" style="font-size:0.82rem;margin-top:4px">${escapeHtml(o.tracking_note)}</p>` : ""}
         </div>
         <div class="admin-order-row__actions">
@@ -618,6 +796,7 @@ const loadAdminClaims = async () => {
               <div class="admin-badges">
                 <span class="claim-status-badge claim-status-badge--${claim.status}">${CLAIM_STATUS_LABELS[claim.status] || claim.status}</span>
                 <span class="badge">${escapeHtml(CLAIM_REASON_LABELS[claim.reason] || claim.reason)}</span>
+                <span class="badge">${escapeHtml(claim.requested_resolution || "review")}</span>
               </div>
             </div>
             <div class="admin-metrics">
@@ -628,6 +807,13 @@ const loadAdminClaims = async () => {
             <div class="admin-claim-card__body">
               <strong>Buyer statement</strong>
               <p>${escapeHtml(claim.details || "No details provided.")}</p>
+              ${
+                claim.evidence_urls?.length
+                  ? `<div class="claim-evidence-list">
+                       ${claim.evidence_urls.map((url) => `<a href="${escapeHtml(url)}" target="_blank" rel="noreferrer">Evidence</a>`).join("")}
+                     </div>`
+                  : ""
+              }
             </div>
             <label class="admin-field">
               <span>Admin note</span>
@@ -696,7 +882,7 @@ const renderAdminError = (message) => {
 const loadAdminPanel = async () => {
   renderAdminLoading();
 
-  const [overview, productQueue, users, logs] = await Promise.all([
+  const [overview, productQueue, users, logs, riskDashboard, verificationEvents] = await Promise.all([
     getAdminOverview(),
     getAdminProducts({ moderation_status: productFilter, search: productSearch, limit: 12 }),
     getAdminUsers({
@@ -706,15 +892,17 @@ const loadAdminPanel = async () => {
       limit: 12,
     }),
     getAdminLogs(20),
+    getAdminRiskDashboard(10),
+    getVerificationEvents(12),
   ]);
 
-  const firstError = [overview, productQueue, users, logs].find((result) => result?.error);
+  const firstError = [overview, productQueue, users, logs, riskDashboard, verificationEvents].find((result) => result?.error);
   if (firstError) {
     renderAdminError(firstError.message || "Please try again in a moment.");
     return;
   }
 
-  renderAdminPanel(overview, productQueue, users, logs);
+  renderAdminPanel(overview, productQueue, users, logs, riskDashboard, verificationEvents);
 };
 
 export const openAdminPanel = async () => {

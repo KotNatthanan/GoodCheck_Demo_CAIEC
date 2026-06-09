@@ -18,7 +18,7 @@ import {
     highlightCategory,
     renderProductSkeletons,
 } from "./ui.js";
-import { t, getCurrency } from "./i18n.js";
+import { t, getCurrency, convertPrice, getLocale } from "./i18n.js";
 import { refreshIcons } from "./utils.js";
 import { showToast } from "./notifications.js";
 
@@ -293,17 +293,24 @@ export const populateCategoryOptions = () => {
 
 // --- Populate price range options based on active currency ---
 export const populatePriceOptions = () => {
-    const isTHB = getCurrency() === "THB";
     const pf = priceFilter();
     if (!pf) return;
+    const currency = getCurrency();
+    const locale = getLocale() === "th" ? "th-TH" : "en-US";
+    const money = (thbValue) => new Intl.NumberFormat(locale, {
+        style: "currency",
+        currency,
+        currencyDisplay: "narrowSymbol",
+        maximumFractionDigits: ["USD", "SGD"].includes(currency) ? 2 : 0,
+    }).format(convertPrice(thbValue));
 
     const current = pf.value;
     pf.innerHTML = [
         `<option value="">${t("filters.all")}</option>`,
-        `<option value="0-5000">${t(isTHB ? "filters.price_below_5k" : "filters.price_below_5k_usd")}</option>`,
-        `<option value="5000-15000">${t(isTHB ? "filters.price_5k_15k" : "filters.price_5k_15k_usd")}</option>`,
-        `<option value="15000-30000">${t(isTHB ? "filters.price_15k_30k" : "filters.price_15k_30k_usd")}</option>`,
-        `<option value="30000+">${t(isTHB ? "filters.price_30k_plus" : "filters.price_30k_plus_usd")}</option>`,
+        `<option value="0-5000">${t("filters.price_below_dynamic", { value: money(5000) })}</option>`,
+        `<option value="5000-15000">${t("filters.price_range_dynamic", { min: money(5000), max: money(15000) })}</option>`,
+        `<option value="15000-30000">${t("filters.price_range_dynamic", { min: money(15000), max: money(30000) })}</option>`,
+        `<option value="30000+">${t("filters.price_above_dynamic", { value: money(30000) })}</option>`,
     ].join("");
     pf.value = current;
 };

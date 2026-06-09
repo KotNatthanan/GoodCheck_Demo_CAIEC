@@ -18,6 +18,8 @@ VALID_PRODUCT_MODERATION_STATUSES = PRODUCT_MODERATION_STATUSES
 VALID_ACCOUNT_STATUSES = ACCOUNT_STATUSES
 VALID_CLAIM_REASONS = CLAIM_REASONS
 VALID_CLAIM_STATUSES = CLAIM_STATUSES
+VALID_CLAIM_RESOLUTIONS = ['refund', 'release_funds', 'replacement', 'review']
+VALID_VERIFICATION_FEEDBACK = ['correct', 'wrong', 'needs_review']
 
 
 def validate_product_data(data, required=True):
@@ -132,6 +134,8 @@ def validate_buyer_claim_data(data):
 
     reason = str(data.get('reason') or '').strip()
     details = str(data.get('details') or '').strip()
+    requested_resolution = str(data.get('requested_resolution') or 'review').strip()
+    evidence_urls = data.get('evidence_urls') or []
 
     if not reason:
         return False, 'Claim reason is required.'
@@ -141,6 +145,32 @@ def validate_buyer_claim_data(data):
         return False, 'Please provide at least 10 characters describing the issue.'
     if len(details) > 3000:
         return False, 'Claim details must be 3000 characters or fewer.'
+    if requested_resolution not in VALID_CLAIM_RESOLUTIONS:
+        return False, f'Requested resolution must be one of: {", ".join(VALID_CLAIM_RESOLUTIONS)}.'
+    if evidence_urls and not isinstance(evidence_urls, list):
+        return False, 'Evidence URLs must be submitted as a list.'
+    for url in evidence_urls:
+        clean_url = str(url or '').strip()
+        if clean_url and not clean_url.startswith(('http://', 'https://')):
+            return False, 'Evidence URLs must start with http:// or https://.'
+
+    return True, None
+
+
+def validate_verification_feedback(data):
+    """
+    Validate image verification feedback payloads.
+    """
+    if not data:
+        return False, 'Feedback payload is required.'
+
+    label = str(data.get('feedback_label') or data.get('label') or '').strip()
+    note = str(data.get('feedback_note') or data.get('note') or '').strip()
+
+    if label not in VALID_VERIFICATION_FEEDBACK:
+        return False, f'Feedback must be one of: {", ".join(VALID_VERIFICATION_FEEDBACK)}.'
+    if len(note) > 1000:
+        return False, 'Feedback note must be 1000 characters or fewer.'
 
     return True, None
 

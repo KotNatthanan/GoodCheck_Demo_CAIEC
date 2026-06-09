@@ -198,6 +198,10 @@ export const getAdminOverview = async () => {
     return await apiCall("/admin/overview");
 };
 
+export const getAdminRiskDashboard = async (limit = 10) => {
+    return await apiCall(`/admin/risk-dashboard?limit=${limit}`);
+};
+
 export const getAdminProducts = async (filters = {}) => {
     const params = new URLSearchParams({
         moderation_status: filters.moderation_status || "pending",
@@ -241,6 +245,14 @@ export const getAdminLogs = async (limit = 20) => {
     return await apiCall(`/admin/logs?limit=${limit}`);
 };
 
+export const getVerificationEvents = async (limit = 20) => {
+    return await apiCall(`/admin/verification-events?limit=${limit}`);
+};
+
+export const submitVerificationFeedback = async (eventId, payload) => {
+    return await apiCall(`/admin/verification-events/${eventId}/feedback`, "PUT", payload);
+};
+
 // --- Review APIs ---
 export const addReview = async (productId, reviewData) => {
     return await apiCall(`/products/${productId}/reviews`, "POST", reviewData);
@@ -275,8 +287,11 @@ export const updateAdminOrderStatus = async (orderId, status, trackingNote = "")
 
 // image comparing api
 
-// --- Image comparing APIs ---
-// Replace the existing `// image comparing api` block in api.js with this.
+export const compareImages = async (image1, image2) => {
+    const formData = new FormData();
+    formData.append("image1", image1);
+    formData.append("image2", image2);
+    formData.append("source", "compare_page");
 
 // Shared multipart POST. No Content-Type header — the browser must set the
 // multipart boundary itself for FormData. Matches the uploadProductImage 401 flow.
@@ -284,7 +299,7 @@ const sendImageForm = async (endpoint, formData) => {
     const headers = {};
     const token = getToken();
     if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
+        headers.Authorization = `Bearer ${token}`;
     }
 
     try {
@@ -314,29 +329,4 @@ const sendImageForm = async (endpoint, formData) => {
         console.error("Compare Error:", error);
         return { error: true, message: error.message || "Network error." };
     }
-};
-
-// Single pair: POST /api/compare
-export const compareImages = async (image1, image2) => {
-    const formData = new FormData();
-    formData.append("image1", image1);
-    formData.append("image2", image2);
-    return sendImageForm("/compare", formData);
-};
-
-// Four sides: POST /api/compare/sides
-//   listing  = { front: File, back: File, left: File, right: File }
-//   incoming = { front: File, back: File, left: File, right: File }
-export const compareSides = async (listing, incoming) => {
-    const formData = new FormData();
-    for (const side of ["front", "back", "left", "right"]) {
-        if (listing[side]) formData.append(`listing_${side}`, listing[side]);
-        if (incoming[side]) formData.append(`incoming_${side}`, incoming[side]);
-    }
-    return sendImageForm("/compare/sides", formData);
-};
-
-//chat bot ai
-export const askChatbot = async (message, history = []) => {
-    return await apiCall("/chatbot", "POST", { message, history });
 };

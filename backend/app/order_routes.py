@@ -18,6 +18,7 @@ orders_bp = Blueprint('orders', __name__, url_prefix='/api/orders')
 BUYER_TRANSITIONS = {
     'pending_payment': ['cancelled'],
     'paid': ['cancelled'],
+    'delivered': ['completed'],
 }
 
 SELLER_TRANSITIONS = {
@@ -30,6 +31,34 @@ ADMIN_TRANSITIONS = {
     'inspection_passed': ['delivered'],
     'delivered': ['completed'],
 }
+
+
+def apply_order_transition(order, new_status):
+    now = datetime.utcnow()
+    order.status = new_status
+
+    if new_status == 'paid':
+        order.payment_status = 'paid'
+        order.escrow_status = 'holding'
+    elif new_status == 'seller_shipped':
+        order.seller_shipped_at = order.seller_shipped_at or now
+    elif new_status == 'inspection':
+        order.inspection_started_at = order.inspection_started_at or now
+    elif new_status == 'inspection_passed':
+        order.inspection_result = 'passed'
+        order.inspection_passed_at = order.inspection_passed_at or now
+    elif new_status == 'delivered':
+        order.delivered_at = order.delivered_at or now
+    elif new_status == 'completed':
+        order.buyer_confirmed_at = order.buyer_confirmed_at or now
+        order.escrow_status = 'released'
+        order.escrow_released_at = order.escrow_released_at or now
+    elif new_status == 'cancelled':
+        if order.payment_status == 'paid':
+            order.escrow_status = 'refunded'
+            order.escrow_refunded_at = order.escrow_refunded_at or now
+        else:
+            order.escrow_status = 'cancelled'
 
 
 @orders_bp.route('', methods=['POST'])
@@ -139,6 +168,7 @@ def pay_order(order_id):
     # Mockup: always approve
     order.status = 'paid'
     order.payment_status = 'paid'
+    order.escrow_status = 'holding'
     order.payment_last4 = card_number[-4:]
     order.payment_name = card_name
 
@@ -223,14 +253,12 @@ def update_order_status(order_id):
             f'Allowed transitions: {", ".join(allowed) if allowed else "none"}.'
         )
 
-    order.status = new_status
+    apply_order_transition(order, new_status)
     if tracking_note:
         order.tracking_note = tracking_note
 
     # Update inspection_result
-    if new_status == 'inspection_passed':
-        order.inspection_result = 'passed'
-    elif new_status == 'cancelled' and current in ('inspection',):
+    if new_status == 'cancelled' and current in ('inspection',):
         order.inspection_result = 'failed'
 
     # Sync product status

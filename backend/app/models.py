@@ -5,6 +5,17 @@ import json
 
 db = SQLAlchemy()
 
+def _json_list(value):
+    if not value:
+        return []
+    if isinstance(value, str):
+        try:
+            value = json.loads(value)
+        except (TypeError, ValueError):
+            return [value] if value else []
+    return value if isinstance(value, list) else []
+
+
 class User(db.Model):
     __tablename__ = 'users'
 
@@ -242,6 +253,14 @@ class Order(db.Model):
     # Inspection / tracking
     tracking_note = db.Column(db.Text, default='')
     inspection_result = db.Column(db.String(20), default='')
+    escrow_status = db.Column(db.String(20), default='pending')  # pending, holding, released, refunded, cancelled
+    seller_shipped_at = db.Column(db.DateTime, nullable=True)
+    inspection_started_at = db.Column(db.DateTime, nullable=True)
+    inspection_passed_at = db.Column(db.DateTime, nullable=True)
+    delivered_at = db.Column(db.DateTime, nullable=True)
+    buyer_confirmed_at = db.Column(db.DateTime, nullable=True)
+    escrow_released_at = db.Column(db.DateTime, nullable=True)
+    escrow_refunded_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -265,6 +284,14 @@ class Order(db.Model):
             'payment_name': self.payment_name,
             'tracking_note': self.tracking_note or '',
             'inspection_result': self.inspection_result or '',
+            'escrow_status': self.escrow_status or 'pending',
+            'seller_shipped_at': self.seller_shipped_at.isoformat() if self.seller_shipped_at else None,
+            'inspection_started_at': self.inspection_started_at.isoformat() if self.inspection_started_at else None,
+            'inspection_passed_at': self.inspection_passed_at.isoformat() if self.inspection_passed_at else None,
+            'delivered_at': self.delivered_at.isoformat() if self.delivered_at else None,
+            'buyer_confirmed_at': self.buyer_confirmed_at.isoformat() if self.buyer_confirmed_at else None,
+            'escrow_released_at': self.escrow_released_at.isoformat() if self.escrow_released_at else None,
+            'escrow_refunded_at': self.escrow_refunded_at.isoformat() if self.escrow_refunded_at else None,
             'buyer_claim': self.buyer_claim.to_dict() if self.buyer_claim else None,
             'seller_review': self.seller_review.to_dict() if self.seller_review else None,
             'created_at': self.created_at.isoformat(),
@@ -281,6 +308,8 @@ class BuyerProtectionClaim(db.Model):
     seller_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
     reason = db.Column(db.String(50), nullable=False, index=True)
     details = db.Column(db.Text, default='')
+    evidence_urls = db.Column(db.JSON, default=list)
+    requested_resolution = db.Column(db.String(30), default='review')
     status = db.Column(db.String(30), default='open', index=True)
     admin_note = db.Column(db.Text, default='')
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
@@ -302,6 +331,8 @@ class BuyerProtectionClaim(db.Model):
             'order_id': self.order_id,
             'reason': self.reason,
             'details': self.details or '',
+            'evidence_urls': _json_list(self.evidence_urls),
+            'requested_resolution': self.requested_resolution or 'review',
             'status': self.status,
             'admin_note': self.admin_note or '',
             'buyer': self.buyer.to_public_dict() if self.buyer else None,
@@ -311,6 +342,59 @@ class BuyerProtectionClaim(db.Model):
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
             'resolved_at': self.resolved_at.isoformat() if self.resolved_at else None,
             'resolved_by': self.resolved_by_admin.to_public_dict() if self.resolved_by_admin else None,
+        }
+
+
+class VerificationEvent(db.Model):
+    __tablename__ = 'verification_events'
+
+    id = db.Column(db.Integer, primary_key=True)
+    source = db.Column(db.String(40), default='compare_page', index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=True, index=True)
+    image1_name = db.Column(db.String(255), default='')
+    image2_name = db.Column(db.String(255), default='')
+    verdict = db.Column(db.String(30), nullable=False, index=True)
+    is_same_item = db.Column(db.Boolean, default=False, index=True)
+    overall_similarity = db.Column(db.Integer, default=0)
+    same_item_confidence = db.Column(db.Integer, default=0)
+    product_category = db.Column(db.String(120), default='', index=True)
+    matched_attributes = db.Column(db.JSON, default=list)
+    distinguishing_details = db.Column(db.JSON, default=list)
+    differences = db.Column(db.JSON, default=list)
+    reasoning = db.Column(db.Text, default='')
+    feedback_label = db.Column(db.String(30), default='', index=True)
+    feedback_note = db.Column(db.Text, default='')
+    feedback_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    feedback_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+    user = db.relationship('User', foreign_keys=[user_id], backref='verification_events')
+    product = db.relationship('Product', foreign_keys=[product_id], backref='verification_events')
+    feedback_user = db.relationship('User', foreign_keys=[feedback_by], backref='verification_feedback')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'source': self.source,
+            'user': self.user.to_public_dict() if self.user else None,
+            'product': self.product.to_summary_dict() if self.product else None,
+            'image1_name': self.image1_name or '',
+            'image2_name': self.image2_name or '',
+            'verdict': self.verdict,
+            'is_same_item': bool(self.is_same_item),
+            'overall_similarity': int(self.overall_similarity or 0),
+            'same_item_confidence': int(self.same_item_confidence or 0),
+            'product_category': self.product_category or '',
+            'matched_attributes': _json_list(self.matched_attributes),
+            'distinguishing_details': _json_list(self.distinguishing_details),
+            'differences': _json_list(self.differences),
+            'reasoning': self.reasoning or '',
+            'feedback_label': self.feedback_label or '',
+            'feedback_note': self.feedback_note or '',
+            'feedback_by': self.feedback_user.to_public_dict() if self.feedback_user else None,
+            'feedback_at': self.feedback_at.isoformat() if self.feedback_at else None,
+            'created_at': self.created_at.isoformat(),
         }
 
 

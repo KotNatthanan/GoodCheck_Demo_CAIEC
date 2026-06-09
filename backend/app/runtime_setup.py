@@ -58,15 +58,38 @@ def ensure_runtime_schema():
         changed |= _add_column_if_missing('orders', order_columns, 'payment_name', "VARCHAR(120) DEFAULT ''")
         changed |= _add_column_if_missing('orders', order_columns, 'tracking_note', "TEXT DEFAULT ''")
         changed |= _add_column_if_missing('orders', order_columns, 'inspection_result', "VARCHAR(20) DEFAULT ''")
+        changed |= _add_column_if_missing('orders', order_columns, 'escrow_status', "VARCHAR(20) DEFAULT 'pending'")
+        changed |= _add_column_if_missing('orders', order_columns, 'seller_shipped_at', 'DATETIME')
+        changed |= _add_column_if_missing('orders', order_columns, 'inspection_started_at', 'DATETIME')
+        changed |= _add_column_if_missing('orders', order_columns, 'inspection_passed_at', 'DATETIME')
+        changed |= _add_column_if_missing('orders', order_columns, 'delivered_at', 'DATETIME')
+        changed |= _add_column_if_missing('orders', order_columns, 'buyer_confirmed_at', 'DATETIME')
+        changed |= _add_column_if_missing('orders', order_columns, 'escrow_released_at', 'DATETIME')
+        changed |= _add_column_if_missing('orders', order_columns, 'escrow_refunded_at', 'DATETIME')
         if changed:
             db.session.commit()
         try:
             db.session.execute(text("UPDATE orders SET status = 'paid' WHERE status = 'confirmed'"))
             db.session.execute(text("UPDATE orders SET status = 'seller_shipped' WHERE status = 'shipped'"))
             db.session.execute(text("UPDATE orders SET payment_status = 'paid' WHERE status != 'pending_payment' AND (payment_status IS NULL OR payment_status = '')"))
+            db.session.execute(text("UPDATE orders SET escrow_status = 'holding' WHERE payment_status = 'paid' AND (escrow_status IS NULL OR escrow_status = '' OR escrow_status = 'pending')"))
+            db.session.execute(text("UPDATE orders SET escrow_status = 'released' WHERE status = 'completed'"))
+            db.session.execute(text("UPDATE orders SET escrow_status = 'cancelled' WHERE status = 'cancelled' AND payment_status != 'paid'"))
             db.session.commit()
         except Exception:
             db.session.rollback()
+
+    if 'buyer_protection_claims' in table_names:
+        claim_columns = {column['name'] for column in inspector.get_columns('buyer_protection_claims')}
+        changed = False
+        changed |= _add_column_if_missing('buyer_protection_claims', claim_columns, 'evidence_urls', "TEXT DEFAULT '[]'")
+        changed |= _add_column_if_missing('buyer_protection_claims', claim_columns, 'requested_resolution', "VARCHAR(30) DEFAULT 'review'")
+        if changed:
+            db.session.commit()
+
+        db.session.execute(text("UPDATE buyer_protection_claims SET evidence_urls = COALESCE(evidence_urls, '[]')"))
+        db.session.execute(text("UPDATE buyer_protection_claims SET requested_resolution = COALESCE(requested_resolution, 'review')"))
+        db.session.commit()
 
 
 def ensure_default_admin(app):

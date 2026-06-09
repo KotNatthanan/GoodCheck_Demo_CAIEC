@@ -1,6 +1,7 @@
 # app/image_comparing.py
 import os
 import statistics
+import time
 from enum import Enum
 from concurrent.futures import ThreadPoolExecutor
 
@@ -8,12 +9,61 @@ from flask import Blueprint, request, jsonify
 from pydantic import BaseModel, Field
 from google import genai
 from google.genai import types
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
+
+from app.models import VerificationEvent, db
 
 compare_bp = Blueprint("compare", __name__)
 
-client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 MODEL = "gemini-2.5-flash"
+MAX_COMPARE_IMAGE_BYTES = 8 * 1024 * 1024
+COMPARE_RATE_LIMIT = 30
+COMPARE_RATE_WINDOW_SECONDS = 60 * 60
+_compare_hits = {}
+
+
+def get_gemini_client():
+    api_key = os.environ.get("GEMINI_API_KEY", "").strip()
+    if not api_key:
+        return None
+    return genai.Client(api_key=api_key)
+
+
+def _check_rate_limit():
+    now = time.time()
+    key = request.remote_addr or "unknown"
+    hits = [
+        hit for hit in _compare_hits.get(key, [])
+        if now - hit < COMPARE_RATE_WINDOW_SECONDS
+    ]
+    if len(hits) >= COMPARE_RATE_LIMIT:
+        _compare_hits[key] = hits
+        return False
+    hits.append(now)
+    _compare_hits[key] = hits
+    return True
+
+
+def _read_image(file_storage, label):
+    if not file_storage.mimetype or not file_storage.mimetype.startswith("image/"):
+        return None, f"{label} must be an image file."
+
+    data = file_storage.read(MAX_COMPARE_IMAGE_BYTES + 1)
+    if not data:
+        return None, f"{label} is empty."
+    if len(data) > MAX_COMPARE_IMAGE_BYTES:
+        return None, f"{label} must be smaller than 8 MB."
+
+    return data, None
+
+
+def _optional_user_id():
+    try:
+        verify_jwt_in_request(optional=True)
+        identity = get_jwt_identity()
+        return int(identity) if identity is not None else None
+    except Exception:
+        return None
 
 SIDES = ["front", "back", "left", "right"]
 DEFAULT_MIME = "image/jpeg"
@@ -162,36 +212,71 @@ def _collect(prefix: str):
 @compare_bp.route("/compare", methods=["POST"])
 @jwt_required()
 def compare_images():
+    if not _check_rate_limit():
+        return jsonify({"error": "Too many image comparison requests. Please try again later."}), 429
+
     img1 = request.files.get("image1")
     img2 = request.files.get("image2")
     if not img1 or not img2:
         return jsonify({"error": "need image1 and image2"}), 400
 
+    img1_bytes, img1_error = _read_image(img1, "image1")
+    if img1_error:
+        return jsonify({"error": img1_error}), 400
+    img2_bytes, img2_error = _read_image(img2, "image2")
+    if img2_error:
+        return jsonify({"error": img2_error}), 400
+
     extra = request.form.get("prompt", "")
+    user_prompt = SYSTEM_PROMPT + (f"\n\nAdditional context: {extra}" if extra else "")
+    client = get_gemini_client()
+    if client is None:
+        return jsonify({
+            "error": "GEMINI_API_KEY is not configured. Add a valid key to backend/.env and restart the backend."
+        }), 503
+
     try:
-        result = compare_pair(
-            img1.read(), img1.mimetype,
-            img2.read(), img2.mimetype,
-            extra,
+        resp = client.models.generate_content(
+            model=MODEL,
+            contents=[
+                user_prompt,
+                types.Part.from_bytes(data=img1_bytes, mime_type=img1.mimetype),
+                types.Part.from_bytes(data=img2_bytes, mime_type=img2.mimetype),
+            ],
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema=ComparisonResult,
+            ),
         )
-        return jsonify(result.model_dump())
+        parsed = resp.parsed
+        payload = parsed.model_dump()
+        product_id = request.form.get("product_id", type=int)
+        event = VerificationEvent(
+            source=request.form.get("source", "compare_page"),
+            user_id=_optional_user_id(),
+            product_id=product_id,
+            image1_name=img1.filename or "",
+            image2_name=img2.filename or "",
+            verdict=payload["verdict"],
+            is_same_item=payload["is_same_item"],
+            overall_similarity=payload["overall_similarity"],
+            same_item_confidence=payload["same_item_confidence"],
+            product_category=payload.get("product_category", ""),
+            matched_attributes=payload.get("matched_attributes", []),
+            distinguishing_details=payload.get("distinguishing_details", []),
+            differences=payload.get("differences", []),
+            reasoning=payload.get("reasoning", ""),
+        )
+        db.session.add(event)
+        db.session.commit()
+        payload["verification_event_id"] = event.id
+        payload["model"] = MODEL
+        return jsonify(payload)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-@compare_bp.route("/compare/sides", methods=["POST"])
-@jwt_required()
-def compare_four_sides():
-    listing, miss_l = _collect("listing")
-    incoming, miss_i = _collect("incoming")
-
-    missing = miss_l + miss_i
-    if missing:
-        return jsonify({"error": "missing images", "fields": missing}), 400
-
-    extra = request.form.get("prompt", "")
-    try:
-        result = compare_sides(listing, incoming, extra)
-        return jsonify(result)
-    except Exception as e:
+        db.session.rollback()
+        message = str(e)
+        if "API_KEY_INVALID" in message or "API key not valid" in message:
+            return jsonify({
+                "error": "GEMINI_API_KEY is invalid. Add a valid key to backend/.env and restart the backend."
+            }), 503
         return jsonify({"error": str(e)}), 500

@@ -45,6 +45,12 @@ def create_buyer_claim(order_id):
         seller_id=order.seller_id,
         reason=data['reason'],
         details=str(data.get('details') or '').strip(),
+        evidence_urls=[
+            str(url).strip()
+            for url in (data.get('evidence_urls') or [])
+            if str(url).strip()
+        ],
+        requested_resolution=str(data.get('requested_resolution') or 'review').strip(),
         status='open',
     )
 

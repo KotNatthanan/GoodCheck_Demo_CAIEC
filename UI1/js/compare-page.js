@@ -1,6 +1,15 @@
-import { compareSides } from "./api.js";
+import { compareImages, getToken, submitVerificationFeedback } from "./api.js";
 
 const $ = (id) => document.getElementById(id);
+let currentVerificationEventId = null;
+
+const escapeHtml = (value = "") =>
+  String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 
 const SIDES = ["front", "back", "left", "right"];
 const GROUPS = ["listing", "incoming"];
@@ -30,41 +39,69 @@ function verdictColor(v) {
   }[v] || "#6b7280";
 }
 
-const label = (v) => esc(String(v || "UNKNOWN").replace(/_/g, " "));
-
-// ---------- Previews ----------
-function previewFile(input, previewEl) {
-  const file = input.files && input.files[0];
-
-  const prev = objectUrls.get(previewEl);
-  if (prev) { URL.revokeObjectURL(prev); objectUrls.delete(previewEl); }
-
-  if (!file) { previewEl.innerHTML = ""; return; }
-
-  const url = URL.createObjectURL(file);
-  objectUrls.set(previewEl, url);
-  previewEl.innerHTML = `<img src="${esc(url)}" alt="preview"
-    style="width:100%;max-height:140px;object-fit:cover;border-radius:8px">`;
-}
-
-// ---------- Collect ----------
-function collect(group) {
-  const out = {};
-  for (const side of SIDES) {
-    const input = $(inputId(group, side));
-    const file = input && input.files && input.files[0];
-    if (file) out[side] = file;
+function renderResult(data) {
+  const el = $("compareResult");
+  el.hidden = false;
+  if (data.error) {
+    currentVerificationEventId = null;
+    el.innerHTML = `<p style="color:#dc2626">Error: ${escapeHtml(data.message || "Something went wrong")}</p>`;
+    return;
   }
-  return out;
-}
+  currentVerificationEventId = data.verification_event_id || null;
+  const attrRows = (data.matched_attributes || []).map(a => `
+    <tr><td>${escapeHtml(a.attribute)}</td><td>${escapeHtml(a.image1_value)}</td><td>${escapeHtml(a.image2_value)}</td>
+    <td style="text-align:center">${a.matches ? "✓" : "✗"}</td></tr>`).join("");
+  const list = (arr) => (arr || []).map(x => `<li>${escapeHtml(x)}</li>`).join("") || "<li>—</li>";
+  el.innerHTML = `
+    <div class="compare-verdict" style="border-color:${verdictColor(data.verdict)}">
+      <strong style="color:${verdictColor(data.verdict)}">${escapeHtml(String(data.verdict || "").replace(/_/g," "))}</strong>
+      <span>${escapeHtml(data.product_category || "")}</span>
+    </div>
+    <div class="compare-scores">
+      <div><label>Overall similarity</label><strong>${data.overall_similarity}%</strong></div>
+      <div><label>Same-item confidence</label><strong>${data.same_item_confidence}%</strong></div>
+      <div><label>Same physical item?</label><strong>${data.is_same_item ? "Yes" : "No"}</strong></div>
+    </div>
+    <p class="compare-reasoning">${escapeHtml(data.reasoning || "")}</p>
+    <table class="compare-table">
+      <thead><tr><th>Attribute</th><th>Image 1</th><th>Image 2</th><th>Match</th></tr></thead>
+      <tbody>${attrRows}</tbody>
+    </table>
+    <div class="compare-lists">
+      <div><h4>Distinguishing details</h4><ul>${list(data.distinguishing_details)}</ul></div>
+      <div><h4>Differences</h4><ul>${list(data.differences)}</ul></div>
+    </div>
+    <div class="compare-feedback">
+      <div>
+        <strong>AI feedback loop</strong>
+        <p>${currentVerificationEventId ? `Event #${currentVerificationEventId} saved with ${escapeHtml(data.model || "Gemini")}.` : "This result was not saved."}</p>
+      </div>
+      <div class="compare-feedback__actions">
+        <button class="outline-btn" data-feedback-label="correct" ${!currentVerificationEventId ? "disabled" : ""}>Correct</button>
+        <button class="outline-btn" data-feedback-label="wrong" ${!currentVerificationEventId ? "disabled" : ""}>Wrong</button>
+        <button class="ghost-btn" data-feedback-label="needs_review" ${!currentVerificationEventId ? "disabled" : ""}>Needs review</button>
+      </div>
+      <small>${getToken() ? "Admin feedback updates the verification dataset." : "Sign in as an admin to save feedback."}</small>
+    </div>`;
 
-function missingSlots(listing, incoming) {
-  const missing = [];
-  for (const side of SIDES) {
-    if (!listing[side]) missing.push(`Listing ${cap(side)}`);
-    if (!incoming[side]) missing.push(`Received ${cap(side)}`);
-  }
-  return missing;
+  el.querySelectorAll("[data-feedback-label]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      if (!currentVerificationEventId) return;
+      button.disabled = true;
+      const originalText = button.textContent;
+      button.textContent = "Saving...";
+      const result = await submitVerificationFeedback(currentVerificationEventId, {
+        feedback_label: button.dataset.feedbackLabel,
+      });
+      if (result?.error) {
+        alert(result.message || "Unable to save feedback. Sign in as an admin first.");
+        button.disabled = false;
+        button.textContent = originalText;
+        return;
+      }
+      button.textContent = "Saved";
+    });
+  });
 }
 
 // ---------- Run ----------

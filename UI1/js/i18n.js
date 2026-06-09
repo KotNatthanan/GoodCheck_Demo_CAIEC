@@ -3,7 +3,7 @@
  *
  * Features:
  *   - Translation: t(key, params) → localised string
- *   - Currency:    getCurrency(), setCurrency() → THB/USD toggle
+ *   - Currency:    getCurrency(), setCurrency() → ASEAN-ready display currency toggle
  *   - Theme:       getTheme(), setTheme() → dark/light mode
  *   - DOM:         applyI18n() → auto-translate [data-i18n] elements
  */
@@ -15,7 +15,7 @@ const DEFAULT_LOCALE = "en";
 const DEFAULT_CURRENCY = "THB";
 const DEFAULT_THEME = "dark";
 const SUPPORTED_LOCALES = ["en", "th"];
-const SUPPORTED_CURRENCIES = ["THB", "USD"];
+const SUPPORTED_CURRENCIES = ["THB", "USD", "SGD", "MYR", "IDR"];
 const SUPPORTED_THEMES = ["dark", "light"];
 
 let currentLocale = DEFAULT_LOCALE;
@@ -99,13 +99,30 @@ export const onLocaleChange = (cb) => {
 
 /* ── currency API ──────────────────────────────────────────── */
 
-const THB_TO_USD = 0.028; // approximate rate
+const CURRENCY_RATES_FROM_THB = {
+  THB: 1,
+  USD: 0.028,
+  SGD: 0.038,
+  MYR: 0.13,
+  IDR: 455,
+};
+
+const CURRENCY_SYMBOLS = {
+  THB: "฿",
+  USD: "$",
+  SGD: "S$",
+  MYR: "RM",
+  IDR: "Rp",
+};
 
 export const getCurrency = () => currentCurrency;
 
 export const convertPrice = (thbValue) => {
-  if (currentCurrency === "USD") return Math.round(thbValue * THB_TO_USD * 100) / 100;
-  return thbValue;
+  const rate = CURRENCY_RATES_FROM_THB[currentCurrency] || 1;
+  const converted = Number(thbValue || 0) * rate;
+  return currentCurrency === "USD" || currentCurrency === "SGD"
+    ? Math.round(converted * 100) / 100
+    : Math.round(converted);
 };
 
 export const getCurrencyCode = () => currentCurrency;
@@ -124,7 +141,7 @@ export const setCurrency = (code) => {
 const updateCurrencySwitcherUI = () => {
   const btn = document.getElementById("currSwitcherBtn");
   if (!btn) return;
-  const symbol = currentCurrency === "USD" ? "$" : "฿";
+  const symbol = CURRENCY_SYMBOLS[currentCurrency] || currentCurrency;
   btn.querySelector(".curr-symbol").textContent = symbol;
   btn.querySelector(".curr-code").textContent = currentCurrency;
 
