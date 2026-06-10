@@ -285,14 +285,6 @@ export const updateAdminOrderStatus = async (orderId, status, trackingNote = "")
 };
 
 
-// image comparing api
-
-export const compareImages = async (image1, image2) => {
-    const formData = new FormData();
-    formData.append("image1", image1);
-    formData.append("image2", image2);
-    formData.append("source", "compare_page");
-
 // Shared multipart POST. No Content-Type header — the browser must set the
 // multipart boundary itself for FormData. Matches the uploadProductImage 401 flow.
 const sendImageForm = async (endpoint, formData) => {
@@ -329,4 +321,31 @@ const sendImageForm = async (endpoint, formData) => {
         console.error("Compare Error:", error);
         return { error: true, message: error.message || "Network error." };
     }
+};
+
+// --- Image Comparing APIs ---
+export const compareImages = async (image1, image2) => {
+    const formData = new FormData();
+    formData.append("image1", image1);
+    formData.append("image2", image2);
+    formData.append("source", "compare_page");
+
+    return await sendImageForm("/compare", formData);
+};
+
+export const compareSides = async (listing, incoming, options = {}) => {
+    const formData = new FormData();
+    ["front", "back", "left", "right"].forEach((side) => {
+        formData.append(`listing_${side}`, listing[side]);
+        formData.append(`incoming_${side}`, incoming[side]);
+    });
+    formData.append("source", options.source || "compare_page_four_side");
+    if (options.product_id) {
+        formData.append("product_id", options.product_id);
+    }
+    if (options.prompt) {
+        formData.append("prompt", options.prompt);
+    }
+
+    return await sendImageForm("/compare", formData);
 };

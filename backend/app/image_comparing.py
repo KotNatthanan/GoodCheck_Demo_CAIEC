@@ -9,7 +9,7 @@ from flask import Blueprint, request, jsonify
 from pydantic import BaseModel, Field
 from google import genai
 from google.genai import types
-from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
+from flask_jwt_extended import get_jwt_identity, jwt_required, verify_jwt_in_request
 
 from app.models import VerificationEvent, db
 
@@ -122,7 +122,7 @@ not just because the model matches.
 Return your analysis strictly in the required JSON schema."""
 
 
-def compare_pair(img1_bytes: bytes, mt1: str, img2_bytes: bytes, mt2: str,
+def compare_pair(client, img1_bytes: bytes, mt1: str, img2_bytes: bytes, mt2: str,
                  extra: str = "") -> ComparisonResult:
     contents = [
         types.Part.from_bytes(data=img1_bytes, mime_type=mt1 or DEFAULT_MIME),
@@ -143,14 +143,14 @@ def compare_pair(img1_bytes: bytes, mt1: str, img2_bytes: bytes, mt2: str,
     return resp.parsed  
 
 
-def compare_sides(listing: dict, incoming: dict, extra: str = "") -> dict:
+def compare_sides(client, listing: dict, incoming: dict, extra: str = "") -> dict:
     def run(side):
         b1, m1 = listing[side]
         b2, m2 = incoming[side]
         last_err = None
         for attempt in range(2): 
             try:
-                return side, compare_pair(b1, m1, b2, m2, extra), None
+                return side, compare_pair(client, b1, m1, b2, m2, extra), None
             except Exception as e:
                 last_err = str(e)
         return side, None, last_err
@@ -203,14 +203,72 @@ def aggregate(per_side: dict, errors: dict | None = None) -> dict:
     }
 
 def _collect(prefix: str):
-    mapping, missing = {}, []
+    mapping, missing, errors = {}, [], {}
     for side in SIDES:
         f = request.files.get(f"{prefix}_{side}")
         if f is None:
             missing.append(f"{prefix}_{side}")
             continue
-        mapping[side] = (f.read(), f.mimetype or DEFAULT_MIME)
-    return mapping, missing
+        data, error = _read_image(f, f"{prefix}_{side}")
+        if error:
+            errors[f"{prefix}_{side}"] = error
+            continue
+        mapping[side] = (data, f.mimetype or DEFAULT_MIME)
+    return mapping, missing, errors
+
+
+def _is_invalid_key_error(message: str) -> bool:
+    return "API_KEY_INVALID" in message or "API key not valid" in message
+
+
+def _per_side_category(payload):
+    for result in (payload.get("per_side") or {}).values():
+        category = result.get("product_category")
+        if category:
+            return category
+    return ""
+
+
+def _per_side_list(payload, key):
+    items = []
+    for side, result in (payload.get("per_side") or {}).items():
+        for item in result.get(key) or []:
+            items.append(f"{side}: {item}")
+    return items
+
+
+def _per_side_attributes(payload):
+    attributes = []
+    for side, result in (payload.get("per_side") or {}).items():
+        for attribute in result.get("matched_attributes") or []:
+            attributes.append({"side": side, **attribute})
+    return attributes
+
+
+def _save_four_side_event(payload):
+    per_side = payload.get("per_side") or {}
+    if not per_side:
+        return None
+
+    event = VerificationEvent(
+        source=request.form.get("source", "compare_page_four_side"),
+        user_id=_optional_user_id(),
+        product_id=request.form.get("product_id", type=int),
+        image1_name="listing_front, listing_back, listing_left, listing_right",
+        image2_name="incoming_front, incoming_back, incoming_left, incoming_right",
+        verdict=payload.get("final_verdict", "REVIEW"),
+        is_same_item=payload.get("final_verdict") == "SAME_ITEM",
+        overall_similarity=payload.get("mean_confidence", 0),
+        same_item_confidence=payload.get("min_confidence", 0),
+        product_category=_per_side_category(payload),
+        matched_attributes=_per_side_attributes(payload),
+        distinguishing_details=_per_side_list(payload, "distinguishing_details"),
+        differences=_per_side_list(payload, "differences"),
+        reasoning=f"Four-side aggregate verdict: {payload.get('final_verdict', 'REVIEW')}",
+    )
+    db.session.add(event)
+    db.session.commit()
+    return event
 
 @compare_bp.route("/compare", methods=["POST"])
 @jwt_required()
@@ -218,40 +276,63 @@ def compare_images():
     if not _check_rate_limit():
         return jsonify({"error": "Too many image comparison requests. Please try again later."}), 429
 
-    img1 = request.files.get("image1")
-    img2 = request.files.get("image2")
-    if not img1 or not img2:
-        return jsonify({"error": "need image1 and image2"}), 400
-
-    img1_bytes, img1_error = _read_image(img1, "image1")
-    if img1_error:
-        return jsonify({"error": img1_error}), 400
-    img2_bytes, img2_error = _read_image(img2, "image2")
-    if img2_error:
-        return jsonify({"error": img2_error}), 400
-
-    extra = request.form.get("prompt", "")
-    user_prompt = SYSTEM_PROMPT + (f"\n\nAdditional context: {extra}" if extra else "")
     client = get_gemini_client()
     if client is None:
         return jsonify({
             "error": "GEMINI_API_KEY is not configured. Add a valid key to backend/.env and restart the backend."
         }), 503
 
+    extra = request.form.get("prompt", "")
+    has_side_payload = any(
+        request.files.get(f"listing_{side}") or request.files.get(f"incoming_{side}")
+        for side in SIDES
+    )
+
     try:
-        resp = client.models.generate_content(
-            model=MODEL,
-            contents=[
-                user_prompt,
-                types.Part.from_bytes(data=img1_bytes, mime_type=img1.mimetype),
-                types.Part.from_bytes(data=img2_bytes, mime_type=img2.mimetype),
-            ],
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                response_schema=ComparisonResult,
-            ),
+        if has_side_payload:
+            listing, listing_missing, listing_errors = _collect("listing")
+            incoming, incoming_missing, incoming_errors = _collect("incoming")
+            missing = listing_missing + incoming_missing
+            validation_errors = {**listing_errors, **incoming_errors}
+            if missing or validation_errors:
+                return jsonify({
+                    "error": "All four listing and incoming side images are required.",
+                    "missing": missing,
+                    "errors": validation_errors,
+                }), 400
+
+            payload = compare_sides(client, listing, incoming, extra)
+            error_text = " ".join(str(value) for value in payload.get("errors", {}).values())
+            if _is_invalid_key_error(error_text):
+                return jsonify({
+                    "error": "GEMINI_API_KEY is invalid. Add a valid key to backend/.env and restart the backend."
+                }), 503
+
+            event = _save_four_side_event(payload)
+            payload["verification_event_id"] = event.id if event else None
+            payload["model"] = MODEL
+            return jsonify(payload)
+
+        img1 = request.files.get("image1")
+        img2 = request.files.get("image2")
+        if not img1 or not img2:
+            return jsonify({"error": "need image1 and image2"}), 400
+
+        img1_bytes, img1_error = _read_image(img1, "image1")
+        if img1_error:
+            return jsonify({"error": img1_error}), 400
+        img2_bytes, img2_error = _read_image(img2, "image2")
+        if img2_error:
+            return jsonify({"error": img2_error}), 400
+
+        parsed = compare_pair(
+            client,
+            img1_bytes,
+            img1.mimetype,
+            img2_bytes,
+            img2.mimetype,
+            extra,
         )
-        parsed = resp.parsed
         payload = parsed.model_dump()
         product_id = request.form.get("product_id", type=int)
         event = VerificationEvent(
@@ -278,7 +359,7 @@ def compare_images():
     except Exception as e:
         db.session.rollback()
         message = str(e)
-        if "API_KEY_INVALID" in message or "API key not valid" in message:
+        if _is_invalid_key_error(message):
             return jsonify({
                 "error": "GEMINI_API_KEY is invalid. Add a valid key to backend/.env and restart the backend."
             }), 503
