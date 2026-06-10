@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=20260328m" />
+    <link rel="stylesheet" href="styles.css?v=20260610nav" />
     <script
       src="https://unpkg.com/lucide@0.263.1/dist/umd/lucide.js"
       defer
@@ -33,6 +33,17 @@
               <p class="brand-title">GoodCheck</p>
               <p class="brand-subtitle" data-i18n="brand.subtitle">Trusted Pro Marketplace</p>
             </div>
+          </div>
+          <div class="top-nav__account">
+            <div id="userSection" class="user-section">
+              <span id="userName" class="user-name"></span>
+              <button class="nav-text-btn" id="logoutBtn" style="display:none" data-i18n="nav.log_out">Log out</button>
+              <button class="nav-signin-btn" id="loginBtn" data-i18n="nav.sign_in">Sign in</button>
+            </div>
+
+            <button class="nav-cta-btn" id="addProductBtn">
+              <span data-i18n="nav.sell_now">Sell Now</span>
+            </button>
           </div>
           <button
             class="nav-mobile-toggle"
@@ -94,16 +105,6 @@
             <button class="nav-text-btn" id="openMyOrders" style="display:none" data-i18n="nav.my_orders">My Orders</button>
             <button class="nav-text-btn nav-text-btn--accent" id="openSellerHub" style="display:none" data-i18n="nav.seller_hub">Seller Hub</button>
             <button class="nav-text-btn nav-text-btn--accent" id="openAdminPanel" style="display:none" data-i18n="nav.admin">Admin</button>
-
-            <div id="userSection" class="user-section">
-              <span id="userName" class="user-name"></span>
-              <button class="nav-text-btn" id="logoutBtn" style="display:none" data-i18n="nav.log_out">Log out</button>
-              <button class="nav-signin-btn" id="loginBtn" data-i18n="nav.sign_in">Sign in</button>
-            </div>
-
-            <button class="nav-cta-btn" id="addProductBtn">
-              <span data-i18n="nav.sell_now">Sell Now</span>
-            </button>
           </div>
         </div>
       </header>

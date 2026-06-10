@@ -133,13 +133,19 @@ main section[id] {
   align-items: center;
   justify-content: space-between;
   gap: 20px;
+  min-width: 0;
 }
 
 .top-nav__panel {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 32px;
+  gap: 20px;
+  min-width: 0;
+}
+
+.top-nav__panel[hidden] {
+  display: none;
 }
 
 .brand {
@@ -173,20 +179,22 @@ main section[id] {
 
 .nav-links {
   display: flex;
-  white-space: nowrap;
-  gap: 24px;
+  flex-wrap: wrap;
+  gap: 10px 18px;
   font-size: 0.95rem;
   color: var(--muted);
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  min-width: 0;
 }
 
 .nav-links a {
-  padding: 6px 0;
+  padding: 7px 0;
   position: relative;
   font-family: var(--font-display);
   font-weight: 500;
   transition: color 0.2s ease;
+  white-space: nowrap;
 }
 
 .nav-links a::after {
@@ -212,10 +220,12 @@ main section[id] {
 
 .nav-actions {
   display: flex;
-  gap: 8px;
+  gap: 8px 10px;
   align-items: center;
   flex-wrap: wrap;
   justify-content: flex-end;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .nav-mobile-toggle {
@@ -238,7 +248,32 @@ main section[id] {
 .user-section {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
+  min-width: 0;
+}
+
+.top-nav__account {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  min-width: 0;
+}
+
+.user-name {
+  max-width: min(100%, 220px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 7px 12px;
+  border-radius: 999px;
+  color: var(--accent);
+  background: rgba(56, 213, 255, 0.08);
+  border: 1px solid rgba(56, 213, 255, 0.18);
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 /* ── Pill cluster (frosted glass container) ──────────────── */
@@ -2494,12 +2529,40 @@ button {
     padding: 18px 20px;
   }
 
-  .top-nav__panel {
+  .top-nav__bar {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
-    gap: 32px;
-    min-width: 0; 
+    gap: 14px;
+  }
+
+  .top-nav__bar .brand {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .top-nav__account {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .user-section {
+    flex: 1 1 auto;
+    justify-content: flex-start;
+  }
+
+  .top-nav__panel {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: stretch;
+    gap: 18px;
+    min-width: 0;
+  }
+
+  .top-nav:not(.is-menu-open) .top-nav__panel {
+    display: none;
   }
 
   .top-nav.is-menu-open .top-nav__panel {
@@ -2509,13 +2572,15 @@ button {
   }
 
   .nav-mobile-toggle {
+    grid-column: 2;
+    grid-row: 1;
     display: inline-flex;
   }
 
   .nav-links {
     display: flex;
     flex-wrap: wrap;      
-    gap: 24px;
+    gap: 10px 18px;
     font-size: 0.95rem;
     color: var(--muted);
     align-items: center;
@@ -3469,6 +3534,12 @@ button {
 
 [data-theme="light"] .nav-links a:hover {
   color: var(--text);
+}
+
+[data-theme="light"] .user-name {
+  color: var(--primary);
+  background: rgba(98, 70, 234, 0.08);
+  border-color: rgba(98, 70, 234, 0.16);
 }
 
 [data-theme="light"] .nav-mobile-toggle {

@@ -193,6 +193,10 @@ export const sendChatMessage = async (conversationId, payload) => {
     return await apiCall(`/chats/${conversationId}/messages`, "POST", payload);
 };
 
+export const askChatbot = async (message, history = []) => {
+    return await apiCall("/chatbot", "POST", { message, history });
+};
+
 // --- Admin APIs ---
 export const getAdminOverview = async () => {
     return await apiCall("/admin/overview");
