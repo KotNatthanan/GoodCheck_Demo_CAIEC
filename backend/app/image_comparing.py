@@ -145,12 +145,15 @@ def compare_pair(img1_bytes: bytes, mt1: str, img2_bytes: bytes, mt2: str,
 
 def compare_sides(listing: dict, incoming: dict, extra: str = "") -> dict:
     def run(side):
-        try:
-            b1, m1 = listing[side]
-            b2, m2 = incoming[side]
-            return side, compare_pair(b1, m1, b2, m2, extra), None
-        except Exception as e:
-            return side, None, str(e)
+        b1, m1 = listing[side]
+        b2, m2 = incoming[side]
+        last_err = None
+        for attempt in range(2): 
+            try:
+                return side, compare_pair(b1, m1, b2, m2, extra), None
+            except Exception as e:
+                last_err = str(e)
+        return side, None, last_err
 
     sides = [s for s in SIDES if s in listing and s in incoming]
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as ex:
